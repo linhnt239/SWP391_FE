@@ -19,6 +19,7 @@ const LoginForm = () => {
     const [formError, setFormError] = useState({});
     const [rememberMe, setRememberMe] = useState(false);
     const router = useRouter();
+    const { login } = useAuth();
 
     useEffect(() => {
         const savedUser = localStorage.getItem('user');
@@ -55,14 +56,40 @@ const LoginForm = () => {
         return Object.keys(errors).length === 0;
     };
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            if (rememberMe) {
-                localStorage.setItem('user', JSON.stringify({ email: formValue.email }));
-                localStorage.setItem('rememberMe', rememberMe);
+            try {
+                // Placeholder cho API đăng nhập - Thay bằng API thực tế của bạn
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: formValue.email, password: formValue.password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Giả định API trả về { id, email, name, avatar }
+                    const userData = {
+                        id: data.id,
+                        email: data.email,
+                        name: data.name,
+                        avatar: data.avatar || 'https://via.placeholder.com/40', // Lấy avatar từ API, mặc định placeholder nếu không có
+                    };
+                    login(userData);
+                    if (rememberMe) {
+                        localStorage.setItem('user', JSON.stringify(userData));
+                        localStorage.setItem('rememberMe', rememberMe);
+                    }
+                    router.push('/');
+                } else {
+                    setFormError({ ...formError, general: data.message || 'Đăng nhập thất bại' });
+                }
+            } catch (error) {
+                console.error('Lỗi:', error);
+                setFormError({ ...formError, general: 'Có lỗi xảy ra, vui lòng thử lại' });
             }
-            router.push('/');
         }
     };
 
@@ -102,13 +129,23 @@ const LoginForm = () => {
                             {formError.password && <div className="text-red-500 text-sm mt-1">{formError.password}</div>}
                         </div>
                         <div className="flex items-center mb-4">
-                            <input type="checkbox" checked={rememberMe} onChange={handleRememberMeChange} className="w-4 h-4 mr-2" />
+                            <input
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={handleRememberMeChange}
+                                className="w-4 h-4 mr-2"
+                            />
                             <p className="text-gray-600">Remember me</p>
                         </div>
-                        <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Đăng nhập</button>
+                        <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
+                            Đăng nhập
+                        </button>
+                        {formError.general && <div className="text-red-500 text-sm mt-2 text-center">{formError.general}</div>}
                     </form>
                     <Link href="/register" className="w-full mt-4">
-                        <button className="w-full border border-gray-400 text-gray-700 py-3 rounded-lg hover:bg-gray-100">Đăng ký</button>
+                        <button className="w-full border border-gray-400 text-gray-700 py-3 rounded-lg hover:bg-gray-100">
+                            Đăng ký
+                        </button>
                     </Link>
                 </div>
             </div>

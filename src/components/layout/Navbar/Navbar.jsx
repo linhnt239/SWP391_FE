@@ -29,16 +29,35 @@ const Navbar = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link href="/contact" className="text-blue-900 hover:text-blue-600">
-                            Liên hệ
+                        <Link href="/vaccination-process" className="text-blue-900 hover:text-blue-600">
+                            Quản lý Tiêm chủng
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/notifications" className="text-blue-900 hover:text-blue-600">
+                            Thông báo
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/vaccination-reaction" className="text-blue-900 hover:text-blue-600">
+                            Phản ứng sau tiêm
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/payment" className="text-blue-900 hover:text-blue-600">
+                            Thanh toán
                         </Link>
                     </li>
                 </ul>
             </div>
-            <div>
-                <button className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800">
-                    Đặt lịch tiêm chủng
-                </button>
+            <div className="flex items-center space-x-4">
+
+                <Link href="/schedule">
+                    <button className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800">
+                        Đặt lịch tiêm chủng
+                    </button>
+                </Link>
+
             </div>
         </nav>
     );

@@ -19,9 +19,6 @@ const Header = () => {
                 </div>
             </div>
             <div className="flex items-center space-x-4">
-                <a href="#">
-                    <FontAwesomeIcon icon={faShoppingCart} className="h-6" />
-                </a>
                 <a href="/login" className="text-sm">
                     Đăng nhập
                 </a>

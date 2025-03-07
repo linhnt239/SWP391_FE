@@ -1,4 +1,4 @@
-// src/pages/schedule.js
+// src/pages/schedule.js (Cập nhật form)
 import React, { useState } from 'react';
 import DefaultLayout from '@/components/layout/DefaultLayout';
 
@@ -8,6 +8,7 @@ const Schedule = () => {
         childName: '',
         childDob: '',
         vaccineType: '',
+        scheduleType: 'single', // Mặc định là tiêm lẻ
         preferredDate: '',
         preferredTime: '',
         note: '',
@@ -20,12 +21,13 @@ const Schedule = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Đặt lịch:', formData);
-        alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ để xác nhận.');
+        alert(`Đặt lịch thành công! Loại lịch: ${formData.scheduleType}. Chúng tôi sẽ liên hệ để xác nhận.`);
         setFormData({
             parentName: '',
             childName: '',
             childDob: '',
             vaccineType: '',
+            scheduleType: 'single',
             preferredDate: '',
             preferredTime: '',
             note: '',
@@ -101,6 +103,35 @@ const Schedule = () => {
                                     <option value="MMR">Vaccine sởi - quai bị - rubella (MMR)</option>
                                     <option value="Other">Khác</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Loại lịch tiêm
+                                </label>
+                                <div className="mt-1 space-y-2">
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="scheduleType"
+                                            value="single"
+                                            checked={formData.scheduleType === 'single'}
+                                            onChange={handleChange}
+                                            className="form-radio text-blue-600"
+                                        />
+                                        <span className="ml-2 text-gray-700">Tiêm lẻ</span>
+                                    </label>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="scheduleType"
+                                            value="package"
+                                            checked={formData.scheduleType === 'package'}
+                                            onChange={handleChange}
+                                            className="form-radio text-blue-600"
+                                        />
+                                        <span className="ml-2 text-gray-700">Trọn gói</span>
+                                    </label>
+                                </div>
                             </div>
                             <div>
                                 <label htmlFor="preferredDate" className="block text-sm font-medium text-gray-700">
