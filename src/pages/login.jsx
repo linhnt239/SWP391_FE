@@ -19,7 +19,7 @@ const LoginForm = () => {
     const [formError, setFormError] = useState({});
     const [rememberMe, setRememberMe] = useState(false);
     const router = useRouter();
-    const { login } = useAuth();
+
 
     useEffect(() => {
         const savedUser = localStorage.getItem('user');

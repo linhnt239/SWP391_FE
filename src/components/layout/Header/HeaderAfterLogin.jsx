@@ -22,6 +22,9 @@ const Header = () => {
                 <a href="/login" className="text-sm">
                     Đăng nhập
                 </a>
+                <a href="/register" className="text-sm">
+                    Đăng ký
+                </a>
             </div>
         </header>
     );
