@@ -6,10 +6,12 @@ const Navbar = () => {
     return (
         <nav className="bg-white p-4 flex justify-between items-center shadow-md">
             <div className="flex items-center">
-                <div className="flex items-center space-x-2">
-                    <img src="/vaccine-icon.jpeg" alt="Vaccine Logo" className="h-10" />
-                    <span className="text-blue-900 font-bold text-xl">Vaccine</span>
-                </div>
+                <Link href="/">
+                    <div className="flex items-center space-x-2">
+                        <img src="/vaccine-icon.jpeg" alt="Vaccine Logo" className="h-10" />
+                        <span className="text-blue-900 font-bold text-xl">Vaccine</span>
+                    </div>
+                </Link>
             </div>
             <div className="flex items-center space-x-6"> {/* Tăng space-x-8 để cách logo và menu ra thêm */}
                 <ul className="flex space-x-8">
