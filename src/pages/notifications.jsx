@@ -1,35 +1,37 @@
-// src/pages/notifications.js
 import DefaultLayout from '@/components/layout/DefaultLayout';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BiBell, BiCheck, BiTime } from 'react-icons/bi';
 
 const Notifications = () => {
-    const notifications = [
-        {
-            id: 1,
-            type: 'appointment',
-            title: 'Nhắc lịch tiêm chủng',
-            message: 'Bạn có lịch tiêm vắc-xin Pentaxim vào ngày 20/04/2024',
-            time: '2 giờ trước',
-            isRead: false,
-        },
-        {
-            id: 2,
-            type: 'system',
-            title: 'Cập nhật hệ thống',
-            message: 'Hệ thống sẽ bảo trì từ 23:00 ngày 15/04/2024 đến 02:00 ngày 16/04/2024',
-            time: '1 ngày trước',
-            isRead: true,
-        },
-        {
-            id: 3,
-            type: 'reminder',
-            title: 'Nhắc nhở theo dõi',
-            message: 'Đừng quên cập nhật tình trạng sau tiêm của bạn trong 24h tới',
-            time: '3 ngày trước',
-            isRead: false,
-        },
-    ];
+    const [notifications, setNotifications] = useState([]);
+    const [userId, setUserId] = useState(null);
+
+    useEffect(() => {
+        // Lấy thông tin người dùng từ localStorage
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+            try {
+                const user = JSON.parse(savedUser);
+                setUserId(user.userId);
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (userId) {
+            // Gọi API để lấy thông báo
+            fetch(`/api/notification/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    setNotifications(data.notifications || []);
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                });
+        }
+    }, [userId]);
 
     const getNotificationColor = (type) => {
         switch (type) {
@@ -66,7 +68,7 @@ const Notifications = () => {
                     <div className="space-y-4">
                         {notifications.map((notification) => (
                             <div
-                                key={notification.id}
+                                key={notification.notificationId}
                                 className={`p-4 border-l-4 rounded-lg ${getNotificationColor(notification.type)} 
                                 ${notification.isRead ? 'opacity-75' : ''} transition duration-200 hover:shadow-md`}
                             >
@@ -75,12 +77,12 @@ const Notifications = () => {
                                         <h3 className="font-semibold text-gray-800 mb-1">
                                             {notification.title}
                                         </h3>
-                                        <p className="text-gray-600">{notification.message}</p>
+                                        <p className="text-gray-600">{notification.messages}</p>
                                     </div>
                                     <div className="flex items-center space-x-4">
                                         <span className="flex items-center text-sm text-gray-500">
                                             <BiTime className="mr-1" />
-                                            {notification.time}
+                                            {new Date(notification.createdAt).toLocaleString()}
                                         </span>
                                         {notification.isRead ? (
                                             <BiCheck className="text-green-500 text-xl" />

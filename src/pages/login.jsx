@@ -72,6 +72,8 @@ const LoginForm = () => {
                 const data = await response.json();
 
                 if (data.token) {
+                    console.log('Token:', data.token);
+
                     const userData = {
                         email: data.email,
                         username: data.username,
@@ -85,7 +87,6 @@ const LoginForm = () => {
                     // Lưu vào cookies
                     document.cookie = `token=${data.token}; path=/`;
                     document.cookie = `user=${JSON.stringify(userData)}; path=/`;
-
                     if (rememberMe) {
                         localStorage.setItem('rememberMe', 'true');
                     }
