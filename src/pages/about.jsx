@@ -24,11 +24,14 @@ const About = () => {
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row items-center gap-12">
                         <div className="md:w-1/2">
-                            <img
-                                src="/about-image.jpg" // Thay bằng hình ảnh thực tế trong public/
-                                alt="About Us"
-                                className="rounded-lg shadow-lg w-full h-64 object-cover"
-                            />
+                            <div className="relative group">
+                                <img
+                                    src="/about.jpg"
+                                    alt="About Us"
+                                    className="rounded-2xl shadow-2xl w-full h-[400px] object-cover transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-3xl"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            </div>
                         </div>
                         <div className="md:w-1/2">
                             <h2 className="text-3xl font-bold text-blue-900 mb-4">Chúng tôi là ai?</h2>

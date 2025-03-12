@@ -22,11 +22,17 @@ const HeaderAfterLogin = () => {
     }, []);
 
     const handleLogout = () => {
+        // Xóa localStorage
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('rememberMe');
-        setShowDropdown(false);
-        router.push('/login');
+
+        // Xóa cookies
+        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+        document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+
+        // Chuyển về trang login
+        window.location.href = '/login';
     };
 
     // Click outside to close dropdown
@@ -72,7 +78,7 @@ const HeaderAfterLogin = () => {
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                                 <div className="px-4 py-2 border-b">
                                     <p className="text-sm font-medium text-gray-900">
-                                        {userData?.email}
+                                        {userData?.username}
                                     </p>
                                 </div>
                                 <Link href="/profile">

@@ -72,18 +72,40 @@ const LoginForm = () => {
                 const data = await response.json();
 
                 if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify({
+                    const userData = {
                         email: data.email,
                         username: data.username,
                         role: data.role
-                    }));
+                    };
+
+                    // Lưu vào localStorage
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(userData));
+
+                    // Lưu vào cookies
+                    document.cookie = `token=${data.token}; path=/`;
+                    document.cookie = `user=${JSON.stringify(userData)}; path=/`;
 
                     if (rememberMe) {
                         localStorage.setItem('rememberMe', 'true');
                     }
 
-                    router.replace('/');
+                    // Chuyển hướng dựa trên role
+                    switch (data.role) {
+                        case 'Staff':
+                            window.location.href = '/staff';
+                            break;
+                        case 'Admin':
+                            window.location.href = '/admin';
+                            break;
+                        case 'User':
+                            window.location.href = '/';
+                            break;
+                        default:
+                            setFormError({
+                                general: 'Tài khoản không có quyền truy cập.'
+                            });
+                    }
                 } else {
                     setFormError({
                         general: data.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
