@@ -13,7 +13,8 @@ const Navbar = () => {
                     </div>
                 </Link>
             </div>
-            <div className="flex items-center space-x-6"> {/* Tăng space-x-8 để cách logo và menu ra thêm */}
+
+            <div className="flex items-center space-x-6">
                 <ul className="flex space-x-8">
                     <li>
                         <Link href="/" className="text-blue-900 hover:text-blue-600">
@@ -52,14 +53,13 @@ const Navbar = () => {
                     </li>
                 </ul>
             </div>
-            <div className="flex items-center space-x-4">
 
+            <div>
                 <Link href="/schedule">
                     <button className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800">
                         Đặt lịch tiêm chủng
                     </button>
                 </Link>
-
             </div>
         </nav>
     );
