@@ -47,11 +47,6 @@ const Navbar = () => {
                             Phản ứng sau tiêm
                         </Link>
                     </li>
-                    <li>
-                        <Link href="/payment" className="text-blue-900 hover:text-blue-600">
-                            Thanh toán
-                        </Link>
-                    </li>
                 </ul>
             </div>
 
