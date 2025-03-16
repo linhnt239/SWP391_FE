@@ -57,8 +57,8 @@ const LoginForm = () => {
         if (validateForm()) {
             try {
                 const loginData = {
-                    "email": formValue.email,
-                    "password": formValue.password
+                    email: formValue.email,
+                    password: formValue.password,
                 };
 
                 const response = await fetch('/api/user/login', {
@@ -66,7 +66,7 @@ const LoginForm = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(loginData)
+                    body: JSON.stringify(loginData),
                 });
 
                 const data = await response.json();
@@ -74,10 +74,12 @@ const LoginForm = () => {
                 if (data.token) {
                     console.log('Token:', data.token);
 
+                    // Thêm userID vào userData
                     const userData = {
                         email: data.email,
                         username: data.username,
-                        role: data.role
+                        role: data.role,
+                        userID: data.userID, // Lưu userID từ response
                     };
 
                     // Lưu vào localStorage
@@ -87,6 +89,7 @@ const LoginForm = () => {
                     // Lưu vào cookies
                     document.cookie = `token=${data.token}; path=/`;
                     document.cookie = `user=${JSON.stringify(userData)}; path=/`;
+
                     if (rememberMe) {
                         localStorage.setItem('rememberMe', 'true');
                     }
@@ -104,18 +107,18 @@ const LoginForm = () => {
                             break;
                         default:
                             setFormError({
-                                general: 'Tài khoản không có quyền truy cập.'
+                                general: 'Tài khoản không có quyền truy cập.',
                             });
                     }
                 } else {
                     setFormError({
-                        general: data.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
+                        general: data.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.',
                     });
                 }
             } catch (error) {
                 console.error('Lỗi đăng nhập:', error);
                 setFormError({
-                    general: 'Có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.'
+                    general: 'Có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.',
                 });
             }
         }
