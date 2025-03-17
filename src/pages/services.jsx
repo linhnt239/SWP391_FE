@@ -2,76 +2,48 @@
 import React, { useState, useEffect } from 'react';
 import DefaultLayout from '@/components/layout/DefaultLayout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSyringe, faInfoCircle, faCalendarAlt, faShieldVirus } from '@fortawesome/free-solid-svg-icons';
+import { faSyringe, faInfoCircle, faCalendarAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
-import Image from 'next/image';
 
 const Services = () => {
     const [vaccines, setVaccines] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Giả lập việc lấy dữ liệu từ API
-        // Trong thực tế, bạn sẽ gọi API thực sự ở đây
         const fetchVaccines = async () => {
             try {
-                // const response = await fetch('/api/vaccines');
-                // const data = await response.json();
-                // setVaccines(data);
+                const response = await fetch('/api/vaccines-all');
 
-                // Dữ liệu mẫu
-                setVaccines([
-                    {
-                        id: 1,
-                        name: 'Vaccine phòng lao (BCG)',
-                        description: 'Vaccine phòng bệnh lao, tiêm cho trẻ sơ sinh',
-                        ageGroup: 'Trẻ từ 0-1 tuổi',
-                        price: 150000,
-                        doses: 1
-                    },
-                    {
-                        id: 2,
-                        name: 'Vaccine 5 trong 1 (Pentaxim)',
-                        description: 'Phòng bạch hầu, ho gà, uốn ván, bại liệt và Hib',
-                        ageGroup: 'Trẻ từ 2-24 tháng',
-                        price: 700000,
-                        doses: 3
-                    },
-                    {
-                        id: 3,
-                        name: 'Vaccine sởi - quai bị - rubella (MMR)',
-                        description: 'Phòng bệnh sởi, quai bị và rubella',
-                        ageGroup: 'Trẻ từ 9 tháng',
-                        price: 300000,
-                        doses: 2
-                    },
-                    {
-                        id: 4,
-                        name: 'Vaccine viêm gan B',
-                        description: 'Phòng bệnh viêm gan B',
-                        ageGroup: 'Mọi lứa tuổi',
-                        price: 220000,
-                        doses: 3
-                    },
-                    {
-                        id: 5,
-                        name: 'Vaccine phòng thủy đậu (Varicella)',
-                        description: 'Phòng bệnh thủy đậu',
-                        ageGroup: 'Trẻ từ 12 tháng trở lên',
-                        price: 650000,
-                        doses: 2
-                    },
-                    {
-                        id: 6,
-                        name: 'Vaccine phòng viêm não Nhật Bản',
-                        description: 'Phòng bệnh viêm não Nhật Bản',
-                        ageGroup: 'Trẻ từ 1-15 tuổi',
-                        price: 280000,
-                        doses: 3
-                    }
-                ]);
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Chuyển đổi dữ liệu API thành định dạng cần thiết cho UI
+                const formattedVaccines = data.map(vaccine => {
+                    // Lấy thông tin từ vaccineDetailsList đầu tiên (nếu có)
+                    const details = vaccine.vaccineDetailsList && vaccine.vaccineDetailsList.length > 0
+                        ? vaccine.vaccineDetailsList[0]
+                        : {};
+
+                    return {
+                        id: vaccine.vaccineId,
+                        name: vaccine.illnessName,
+                        description: vaccine.descriptions,
+                        ageGroup: `Trẻ từ ${vaccine.ageLimit} tháng trở lên`,
+                        price: details.price || 0,
+                        doses: details.doseRequire || 1
+                    };
+                });
+
+                setVaccines(formattedVaccines);
+                setError(null);
             } catch (error) {
                 console.error('Error fetching vaccines:', error);
+                setError(error.message || 'Đã xảy ra lỗi khi tải dữ liệu vaccine');
+                setVaccines([]);
             } finally {
                 setIsLoading(false);
             }
@@ -101,6 +73,19 @@ const Services = () => {
                     {isLoading ? (
                         <div className="flex justify-center items-center h-64">
                             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    ) : error ? (
+                        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-6 mb-8">
+                            <div className="flex items-center mb-3">
+                                <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-600 text-xl mr-2" />
+                                <h3 className="text-lg font-semibold">Không thể tải dữ liệu</h3>
+                            </div>
+                            <p>{error}</p>
+                            <p className="mt-3">Vui lòng thử lại sau hoặc liên hệ với quản trị viên.</p>
+                        </div>
+                    ) : vaccines.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-gray-600">Không có dữ liệu vaccine nào.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -150,7 +135,7 @@ const Services = () => {
                             </li>
                         </ul>
                         <div className="mt-6 text-center">
-                            <Link href="/appointment" className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg inline-flex items-center transition-colors">
+                            <Link href="/schedule" className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg inline-flex items-center transition-colors">
                                 <FontAwesomeIcon icon={faCalendarAlt} className="mr-2" />
                                 Đặt lịch ngay
                             </Link>

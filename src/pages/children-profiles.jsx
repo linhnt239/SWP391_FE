@@ -12,45 +12,120 @@ const ChildrenProfiles = () => {
         childrenName: '',
         dateOfBirth: '',
         gender: 'male',
-        additionalInfo: ''
+        medicalIssue: ''
     });
     const [userId, setUserId] = useState(null);
+    const [token, setToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
+    // Lấy thông tin người dùng và token từ localStorage
     useEffect(() => {
-        // Lấy thông tin người dùng từ localStorage
         const savedUser = localStorage.getItem('user');
+        const savedToken = localStorage.getItem('token');
+
+        if (!savedToken) {
+            setError('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
+            setIsLoading(false);
+            return;
+        }
+
+        setToken(savedToken);
+
         if (savedUser) {
             try {
                 const user = JSON.parse(savedUser);
-                setUserId(user.userId);
+                if (user && user.userID) {
+                    setUserId(user.userID);
+                    console.log("User ID loaded:", user.userID);
+                } else {
+                    console.error('User ID not found in stored user data');
+                    setError('Không tìm thấy ID người dùng. Vui lòng đăng nhập lại.');
+                }
             } catch (error) {
                 console.error('Error parsing user data:', error);
+                setError('Không thể lấy thông tin người dùng');
             }
+        } else {
+            console.error('No user data found in localStorage');
+            setError('Vui lòng đăng nhập để xem hồ sơ trẻ');
         }
     }, []);
 
+    // Tạo API headers với token
+    const createHeaders = () => {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        };
+    };
+
+    // Fetch children data when userId and token are available
     useEffect(() => {
-        if (userId) {
+        if (userId && token) {
             fetchChildren();
         } else {
             setIsLoading(false);
         }
-    }, [userId]);
+    }, [userId, token]);
 
     const fetchChildren = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/children/${userId}`);
-            const data = await response.json();
+            console.log("Fetching children with token:", token);
+            console.log("User ID:", userId);
 
-            if (response.ok) {
-                setChildren(data.children || []);
-            } else {
-                console.error('Error fetching children:', data.message);
+            const response = await fetch(`/api/child-get/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("API Error Response:", errorText);
+                throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
+
+            const data = await response.json();
+            console.log("Children data (raw):", data);
+
+            // Kiểm tra cấu trúc dữ liệu trả về và cập nhật state
+            let processedChildren = [];
+
+            if (Array.isArray(data)) {
+                console.log("Data is an array");
+                processedChildren = data;
+            } else if (data && typeof data === 'object') {
+                console.log("Data is an object");
+                // Kiểm tra các trường phổ biến có thể chứa mảng trẻ em
+                if (data.children && Array.isArray(data.children)) {
+                    processedChildren = data.children;
+                } else if (data.data && Array.isArray(data.data)) {
+                    processedChildren = data.data;
+                } else if (data.results && Array.isArray(data.results)) {
+                    processedChildren = data.results;
+                } else if (data.items && Array.isArray(data.items)) {
+                    processedChildren = data.items;
+                } else {
+                    // Nếu không tìm thấy mảng, kiểm tra xem đối tượng có phải là một hồ sơ trẻ không
+                    if (data.childrenId || data.childrenName) {
+                        processedChildren = [data];
+                    } else {
+                        // Log toàn bộ cấu trúc dữ liệu để debug
+                        console.log("Unknown data structure:", JSON.stringify(data, null, 2));
+                    }
+                }
+            }
+
+            console.log("Processed children:", processedChildren);
+            setChildren(processedChildren);
+            setError(null);
         } catch (error) {
             console.error('Error fetching children:', error);
+            setError(`Không thể tải danh sách hồ sơ trẻ: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -63,7 +138,7 @@ const ChildrenProfiles = () => {
                 childrenName: child.childrenName,
                 dateOfBirth: child.dateOfBirth.split('T')[0], // Format date for input
                 gender: child.gender,
-                additionalInfo: child.additionalInfo || ''
+                medicalIssue: child.medicalIssue || ''
             });
         } else {
             setCurrentChild(null);
@@ -71,7 +146,7 @@ const ChildrenProfiles = () => {
                 childrenName: '',
                 dateOfBirth: '',
                 gender: 'male',
-                additionalInfo: ''
+                medicalIssue: ''
             });
         }
         setIsModalOpen(true);
@@ -92,62 +167,76 @@ const ChildrenProfiles = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const childData = {
-            ...formData,
-            userId
-        };
+        if (!userId || !token) {
+            alert('Không tìm thấy thông tin người dùng hoặc token. Vui lòng đăng nhập lại.');
+            return;
+        }
 
         try {
             let response;
 
             if (currentChild) {
                 // Cập nhật hồ sơ trẻ hiện có
-                response = await fetch(`/api/children/${currentChild.childId}`, {
+                response = await fetch(`/api/child-update/${currentChild.childrenId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(childData)
+                    headers: createHeaders(),
+                    body: JSON.stringify(formData)
                 });
             } else {
                 // Tạo hồ sơ trẻ mới
-                response = await fetch('/api/children', {
+                response = await fetch(`/api/child-create/${userId}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(childData)
+                    headers: createHeaders(),
+                    body: JSON.stringify(formData)
                 });
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
 
             const data = await response.json();
+            console.log("Save response:", data);
 
-            if (response.ok) {
-                fetchChildren();
-                handleCloseModal();
-            } else {
-                console.error('Error saving child profile:', data.message);
-            }
+            // Hiển thị thông báo thành công
+            alert(currentChild ? 'Cập nhật hồ sơ trẻ thành công' : 'Thêm hồ sơ trẻ thành công');
+
+            // Tải lại danh sách trẻ sau khi thêm/cập nhật
+            fetchChildren();
+            handleCloseModal();
         } catch (error) {
             console.error('Error saving child profile:', error);
+            alert(`Không thể lưu hồ sơ trẻ: ${error.message}`);
         }
     };
 
-    const handleDelete = async (childId) => {
+    const handleDelete = async (childrenId) => {
+        if (!token) {
+            alert('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
+            return;
+        }
+
         if (window.confirm('Bạn có chắc chắn muốn xóa hồ sơ này không?')) {
             try {
-                const response = await fetch(`/api/children/${childId}`, {
-                    method: 'DELETE'
+                const response = await fetch(`/api/child-delete/${childrenId}`, {
+                    method: 'DELETE',
+                    headers: createHeaders()
                 });
 
-                if (response.ok) {
-                    fetchChildren();
-                } else {
-                    const data = await response.json();
-                    console.error('Error deleting child profile:', data.message);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
                 }
+
+                // Hiển thị thông báo thành công
+                alert('Xóa hồ sơ trẻ thành công');
+
+                // Tải lại danh sách trẻ sau khi xóa
+                fetchChildren();
             } catch (error) {
                 console.error('Error deleting child profile:', error);
+                alert(`Không thể xóa hồ sơ trẻ: ${error.message}`);
             }
         }
     };
@@ -197,6 +286,12 @@ const ChildrenProfiles = () => {
                     </button>
                 </div>
 
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6">
+                        <p>{error}</p>
+                    </div>
+                )}
+
                 {isLoading ? (
                     <div className="flex justify-center items-center h-64">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -204,7 +299,7 @@ const ChildrenProfiles = () => {
                 ) : children.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {children.map((child) => (
-                            <div key={child.childId} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                            <div key={child.childrenId} className="bg-white rounded-lg shadow-lg overflow-hidden">
                                 <div className="p-6">
                                     <div className="flex justify-between items-start mb-4">
                                         <h2 className="text-xl font-bold text-gray-800">{child.childrenName}</h2>
@@ -216,7 +311,7 @@ const ChildrenProfiles = () => {
                                                 <BiEdit size={20} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(child.childId)}
+                                                onClick={() => handleDelete(child.childrenId)}
                                                 className="text-red-600 hover:text-red-800"
                                             >
                                                 <BiTrash size={20} />
@@ -237,11 +332,11 @@ const ChildrenProfiles = () => {
                                             <span className="font-semibold w-32">Giới tính:</span>
                                             <span>{child.gender === 'male' ? 'Nam' : 'Nữ'}</span>
                                         </div>
-                                        {child.additionalInfo && (
+                                        {child.medicalIssue && (
                                             <div>
-                                                <span className="font-semibold block mb-1">Thông tin thêm:</span>
+                                                <span className="font-semibold block mb-1">Vấn đề sức khỏe:</span>
                                                 <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">
-                                                    {child.additionalInfo}
+                                                    {child.medicalIssue}
                                                 </p>
                                             </div>
                                         )}
@@ -338,17 +433,17 @@ const ChildrenProfiles = () => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="additionalInfo">
-                                                Thông tin thêm
+                                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="medicalIssue">
+                                                Vấn đề sức khỏe
                                             </label>
                                             <textarea
-                                                id="additionalInfo"
-                                                name="additionalInfo"
-                                                value={formData.additionalInfo}
+                                                id="medicalIssue"
+                                                name="medicalIssue"
+                                                value={formData.medicalIssue}
                                                 onChange={handleChange}
                                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                 rows="4"
-                                                placeholder="Nhập thông tin thêm về trẻ (nếu có)"
+                                                placeholder="Nhập thông tin về vấn đề sức khỏe của trẻ (nếu có)"
                                             ></textarea>
                                         </div>
                                     </div>

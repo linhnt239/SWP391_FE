@@ -117,7 +117,7 @@ const About = () => {
             </section>
 
             {/* Call to Action */}
-            <section className="py-12 bg-blue-900 text-white text-center">
+            <section className="py-12 bg-blue-700 text-white text-center">
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl font-bold mb-4">Hãy cùng chúng tôi bảo vệ trẻ em!</h2>
                     <p className="text-lg mb-6 max-w-xl mx-auto">
