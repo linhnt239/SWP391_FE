@@ -97,46 +97,95 @@ const VaccineDetail = () => {
         }
     };
 
-    const handleAddToCart = () => {
+    const handleAddToCart = async () => {
         try {
-            // Lấy giỏ hàng hiện tại từ localStorage hoặc tạo mới nếu chưa có
+            // Lấy thông tin user từ localStorage
+            const savedUser = localStorage.getItem('user');
+            const savedToken = localStorage.getItem('token');
+
+            if (!savedUser || !savedToken) {
+                alert('Vui lòng đăng nhập để thêm vaccine vào giỏ hàng!');
+                router.push('/login');
+                return;
+            }
+
+            const user = JSON.parse(savedUser);
+            const userId = user.userId || user.userID || user.id;
+
+            // Kiểm tra vaccineDetailsId có tồn tại không
+            if (!vaccine.detailsId) {
+                throw new Error('Không tìm thấy thông tin vaccine');
+            }
+
+            console.log('Adding to cart:', {
+                vaccineDetailsId: vaccine.detailsId,
+                userId: userId,
+                quantity: 1
+            });
+
+            // Gọi API để thêm vào giỏ hàng
+            const response = await fetch(`/api/cart/add/${vaccine.detailsId}/1/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${savedToken}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("API Error Response:", errorText);
+                throw new Error(`Không thể thêm vaccine vào giỏ hàng: ${response.status}`);
+            }
+
+            // Thay đổi ở đây: Đọc response dưới dạng text thay vì JSON
+            const result = await response.text();
+            console.log('Add to cart result:', result);
+
+            // Nếu API thành công, cập nhật localStorage
             const currentCart = JSON.parse(localStorage.getItem('cart') || '[]');
 
             // Kiểm tra xem vaccine đã có trong giỏ hàng chưa
-            const existingItem = currentCart.find(item => item.id === vaccine.id);
+            const existingItemIndex = currentCart.findIndex(item =>
+                item.id === vaccine.id ||
+                item.detailsId === vaccine.detailsId
+            );
 
-            if (existingItem) {
-                // Nếu đã có, hiển thị thông báo và không thêm vào giỏ hàng
-                alert('Vaccine này đã có trong giỏ hàng của bạn!');
-                return;
-            } else {
-                // Nếu chưa có, thêm mới vào giỏ hàng với số lượng cố định là 1
+            if (existingItemIndex === -1) {
+                // Thêm mới vào giỏ hàng
                 currentCart.push({
                     id: vaccine.id,
+                    detailsId: vaccine.detailsId,
                     name: vaccine.name,
                     price: vaccine.price,
-                    quantity: 1, // Số lượng cố định là 1
+                    quantity: 1,
                     manufacturer: vaccine.manufacturer,
                     doses: vaccine.doses,
                     dateBetweenDoses: vaccine.dateBetweenDoses
                 });
+
+                // Lưu giỏ hàng vào localStorage
+                localStorage.setItem('cart', JSON.stringify(currentCart));
+
+                // Kích hoạt sự kiện cập nhật giỏ hàng
+                window.dispatchEvent(new Event('cartUpdated'));
+
+                // Hiển thị thông báo thành công
+                setAddedToCart(true);
+
+                // Reset thông báo sau 3 giây
+                setTimeout(() => {
+                    setAddedToCart(false);
+                }, 3000);
+            } else {
+                // Nếu đã tồn tại, thông báo cho người dùng
+                alert('Vaccine này đã có trong giỏ hàng!');
+                return;
             }
 
-            // Lưu giỏ hàng vào localStorage
-            localStorage.setItem('cart', JSON.stringify(currentCart));
-
-            // Kích hoạt sự kiện cập nhật giỏ hàng
-            window.dispatchEvent(new Event('cartUpdated'));
-
-            // Hiển thị thông báo thành công
-            setAddedToCart(true);
-
-            // Reset thông báo sau 3 giây
-            setTimeout(() => {
-                setAddedToCart(false);
-            }, 3000);
         } catch (error) {
             console.error('Error adding to cart:', error);
+            alert(error.message);
         }
     };
 

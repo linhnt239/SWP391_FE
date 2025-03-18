@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DefaultLayout from '@/components/layout/DefaultLayout';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import PaymentStep from '@/components/payment/PaymentStep';
 
 const Schedule = () => {
     const router = useRouter();
@@ -15,6 +16,7 @@ const Schedule = () => {
     const [selectedChild, setSelectedChild] = useState(null);
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
+    const [paymentSuccess, setPaymentSuccess] = useState(false);
 
     const [formData, setFormData] = useState({
         childId: '',
@@ -74,28 +76,73 @@ const Schedule = () => {
         }
     }, [userId, token]);
 
+    useEffect(() => {
+        // Kiểm tra URL parameters khi component được mount
+        const urlParams = new URLSearchParams(window.location.search);
+        const vnp_ResponseCode = urlParams.get('vnp_ResponseCode');
+
+        if (vnp_ResponseCode === "00") {
+            setPaymentSuccess(true);
+            setStep(2); // Chuyển đến bước 3
+            // Xóa URL parameters
+            window.history.replaceState({}, '', '/schedule');
+        }
+    }, []);
+
     const fetchChildren = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/child-get/${userId}`, {
+            console.log("Fetching children with token:", token);
+            console.log("User ID:", userId);
+
+            // Cập nhật URL endpoint mới
+            const response = await fetch(`/api/child-get/${userId}/user`, {
+                method: 'GET',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 }
             });
 
             if (!response.ok) {
-                throw new Error(`API error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error("API Error Response:", errorText);
+                throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
 
             const data = await response.json();
             console.log("Children data:", data);
 
+            // Kiểm tra cấu trúc dữ liệu trả về và cập nhật state
+            let processedChildren = [];
+
             if (Array.isArray(data)) {
-                setChildren(data);
-            } else {
-                console.error("Unexpected API response format:", data);
-                setChildren([]);
+                console.log("Data is an array");
+                processedChildren = data;
+            } else if (data && typeof data === 'object') {
+                console.log("Data is an object");
+                // Kiểm tra các trường phổ biến có thể chứa mảng trẻ em
+                if (data.children && Array.isArray(data.children)) {
+                    processedChildren = data.children;
+                } else if (data.data && Array.isArray(data.data)) {
+                    processedChildren = data.data;
+                } else if (data.results && Array.isArray(data.results)) {
+                    processedChildren = data.results;
+                } else if (data.items && Array.isArray(data.items)) {
+                    processedChildren = data.items;
+                } else {
+                    // Nếu không tìm thấy mảng, kiểm tra xem đối tượng có phải là một hồ sơ trẻ không
+                    if (data.childrenId || data.childrenName) {
+                        processedChildren = [data];
+                    } else {
+                        // Log toàn bộ cấu trúc dữ liệu để debug
+                        console.log("Unknown data structure:", JSON.stringify(data, null, 2));
+                    }
+                }
             }
+
+            console.log("Processed children:", processedChildren);
+            setChildren(processedChildren);
         } catch (error) {
             console.error('Error fetching children:', error);
             setChildren([]);
@@ -115,35 +162,38 @@ const Schedule = () => {
         // Nếu chọn một đứa trẻ từ danh sách, cập nhật thông tin
         if (name === 'childId') {
             if (value === 'new') {
-                // Nếu chọn "Thêm hồ sơ trẻ mới", reset thông tin trẻ
                 setFormData(prev => ({
                     ...prev,
                     childId: 'new',
                     childName: '',
                     dateOfBirth: '',
                     gender: '',
+                    useExistingProfile: false
                 }));
                 setSelectedChild(null);
             } else if (value) {
-                // Nếu chọn một đứa trẻ có sẵn
-                const child = children.find(c => c.childId === value || c.id === value);
+                // Sửa lại phần tìm kiếm trẻ
+                const selectedChildId = value.split(' - ')[0]; // Lấy phần ID từ giá trị select
+                const child = children.find(c =>
+                    c.childrenId === selectedChildId ||
+                    c.id === selectedChildId
+                );
+
+                console.log("Selected Child ID:", selectedChildId);
+                console.log("Available Children:", children);
+                console.log("Found child:", child);
+
                 if (child) {
                     setSelectedChild(child);
                     setFormData(prev => ({
                         ...prev,
-                        childId: value,
-                        childName: child.childrenName || child.name || '',
-                        dateOfBirth: child.dateOfBirth || child.dob || '',
-                        gender: child.gender || '',
+                        childId: selectedChildId,
+                        useExistingProfile: true,
+                        childName: child.childrenName || child.name,
+                        dateOfBirth: child.dateOfBirth || child.dob,
+                        gender: child.gender
                     }));
                 }
-            } else {
-                // Nếu không chọn đứa trẻ nào
-                setFormData(prev => ({
-                    ...prev,
-                    childId: '',
-                }));
-                setSelectedChild(null);
             }
         }
 
@@ -202,33 +252,24 @@ const Schedule = () => {
 
     const handleCheckout = async () => {
         try {
-            // Chuẩn bị dữ liệu để gửi đi
             const checkoutData = {
-                userId: userId,
-                childId: formData.childId !== 'new' ? formData.childId : null,
-                childInfo: formData.childId === 'new' ? {
-                    name: formData.childName,
-                    dateOfBirth: formData.dateOfBirth,
-                    gender: formData.gender
-                } : null,
-                vaccines: cartItems.map(item => ({
-                    vaccineId: item.id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity
-                })),
-                appointmentInfo: {
-                    date: formData.preferredDate,
-                    time: formData.preferredTime,
-                    note: formData.note
-                },
-                totalAmount: totalPrice
+                childrenName: selectedChild ? selectedChild.childrenName : formData.childName,
+                childrenGender: selectedChild ? selectedChild.gender : formData.gender,
+                dateOfBirth: selectedChild ? selectedChild.dateOfBirth : formData.dateOfBirth,
+                medicalIssue: "None",
+                appointmentDate: formData.preferredDate,
+                timeStart: formData.preferredTime,
+                note: formData.note || ""
             };
 
-            console.log('Checkout data:', checkoutData);
+            // Lưu thông tin lịch hẹn vào localStorage
+            localStorage.setItem('lastAppointment', JSON.stringify({
+                childName: checkoutData.childrenName,
+                appointmentDate: formData.preferredDate,
+                appointmentTime: formData.timeStart
+            }));
 
-            // Gửi request đến API
-            const response = await fetch('/api/cart/checkout', {
+            const response = await fetch(`/api/cart/checkout?userId=${userId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -238,23 +279,46 @@ const Schedule = () => {
             });
 
             if (!response.ok) {
-                throw new Error(`API error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                throw new Error(errorText);
             }
 
-            const result = await response.json();
-            console.log('Checkout result:', result);
+            const result = await response.text();
 
-            // Xóa giỏ hàng sau khi đặt lịch thành công
-            localStorage.setItem('cart', JSON.stringify([]));
-            window.dispatchEvent(new Event('cartUpdated'));
-
-            // Chuyển hướng đến trang xác nhận
-            router.push('/confirmation');
+            if (result && result.startsWith('http')) {
+                // Chuyển hướng trực tiếp đến URL thanh toán mà không thêm returnUrl
+                window.location.href = result;
+            } else {
+                throw new Error('Invalid payment URL received');
+            }
         } catch (error) {
             console.error('Error during checkout:', error);
             alert(`Đã xảy ra lỗi khi thanh toán: ${error.message}`);
         }
     };
+
+    // Cập nhật useEffect để xử lý kết quả thanh toán
+    useEffect(() => {
+        const checkPaymentResult = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const vnp_ResponseCode = urlParams.get('vnp_ResponseCode');
+
+            // Chỉ xử lý khi có response code
+            if (vnp_ResponseCode) {
+                if (vnp_ResponseCode === "00") {
+                    setPaymentSuccess(true);
+                    setStep(2); // Chuyển đến bước 3
+                } else {
+                    alert('Thanh toán không thành công. Vui lòng thử lại.');
+                }
+
+                // Xóa query parameters
+                window.history.replaceState({}, '', '/schedule');
+            }
+        };
+
+        checkPaymentResult();
+    }, []);
 
     // Định dạng giá tiền
     const formatPrice = (price) => {
@@ -293,6 +357,74 @@ const Schedule = () => {
         }
 
         return `${age} tuổi`;
+    };
+
+    const renderStep3 = () => {
+        if (paymentSuccess) {
+            const lastAppointment = JSON.parse(localStorage.getItem('lastAppointment') || '{}');
+
+            return (
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                    <div className="text-center mb-6">
+                        <div className="rounded-full bg-green-100 p-3 mx-auto w-fit mb-4">
+                            <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Thanh toán thành công!</h2>
+                        <p className="text-gray-600">Cảm ơn bạn đã đặt lịch tiêm chủng.</p>
+                    </div>
+
+                    {/* Thông tin lịch hẹn */}
+                    <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                        <h3 className="text-xl font-semibold text-blue-900 mb-4">Thông tin lịch tiêm</h3>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Tên trẻ:</span>
+                                <span className="font-medium">{lastAppointment.childName}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Ngày tiêm:</span>
+                                <span className="font-medium">{lastAppointment.appointmentDate}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Giờ tiêm:</span>
+                                <span className="font-medium">{lastAppointment.appointmentTime}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Nút điều hướng */}
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button
+                            onClick={() => router.push('/appointments')}
+                            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                        >
+                            Xem lịch hẹn của tôi
+                        </button>
+                        <button
+                            onClick={() => router.push('/')}
+                            className="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+                        >
+                            Về trang chủ
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <PaymentStep
+                formData={formData}
+                selectedChild={selectedChild}
+                cartItems={cartItems}
+                totalPrice={totalPrice}
+                onBack={() => setStep(1)}
+                onCheckout={handleCheckout}
+                formatPrice={formatPrice}
+                formatDate={formatDate}
+            />
+        );
     };
 
     if (loading) {
@@ -394,7 +526,10 @@ const Schedule = () => {
                                                     >
                                                         <option value="">-- Chọn hồ sơ trẻ --</option>
                                                         {children.map(child => (
-                                                            <option key={child.childId || child.id} value={child.childId || child.id}>
+                                                            <option
+                                                                key={child.childrenId || child.id}
+                                                                value={child.childrenId || child.id}
+                                                            >
                                                                 {child.childrenName || child.name} - {formatDate(child.dateOfBirth || child.dob)}
                                                             </option>
                                                         ))}
@@ -701,166 +836,7 @@ const Schedule = () => {
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                        // Bước 2: Thanh toán
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div className="lg:col-span-2">
-                                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                                    <div className="p-6 border-b border-gray-200">
-                                        <h2 className="text-xl font-bold text-gray-800">Thanh toán</h2>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            Vui lòng chọn phương thức thanh toán
-                                        </p>
-                                    </div>
-
-                                    <div className="p-6">
-                                        <div className="mb-6">
-                                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Thông tin đơn hàng</h3>
-
-                                            <div className="bg-gray-50 p-4 rounded-lg">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Người đăng ký:</p>
-                                                        <p className="font-medium">{formData.parentName}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Số điện thoại:</p>
-                                                        <p className="font-medium">{formData.parentPhone}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Người được tiêm:</p>
-                                                        <p className="font-medium">{formData.useExistingProfile && selectedChild ? (selectedChild.childrenName || selectedChild.name) : formData.childName}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Ngày sinh:</p>
-                                                        <p className="font-medium">{formatDate(formData.useExistingProfile && selectedChild ? (selectedChild.dateOfBirth || selectedChild.dob) : formData.dateOfBirth)}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Ngày tiêm:</p>
-                                                        <p className="font-medium">{formatDate(formData.preferredDate)}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Giờ tiêm:</p>
-                                                        <p className="font-medium">{formData.preferredTime}</p>
-                                                    </div>
-                                                </div>
-
-                                                {formData.note && (
-                                                    <div className="mt-4">
-                                                        <p className="text-sm text-gray-600">Ghi chú:</p>
-                                                        <p className="font-medium">{formData.note}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="mb-6">
-                                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Phương thức thanh toán</h3>
-
-                                            <div className="space-y-3">
-                                                <label className="block p-4 border border-gray-300 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            type="radio"
-                                                            name="paymentMethod"
-                                                            value="cash"
-                                                            defaultChecked
-                                                            className="form-radio h-4 w-4 text-blue-600"
-                                                        />
-                                                        <div className="ml-3">
-                                                            <span className="font-medium text-gray-800">Thanh toán tại trung tâm</span>
-                                                            <p className="text-sm text-gray-600 mt-1">Thanh toán trực tiếp khi đến tiêm</p>
-                                                        </div>
-                                                    </div>
-                                                </label>
-
-                                                <label className="block p-4 border border-gray-300 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            type="radio"
-                                                            name="paymentMethod"
-                                                            value="bank"
-                                                            className="form-radio h-4 w-4 text-blue-600"
-                                                        />
-                                                        <div className="ml-3">
-                                                            <span className="font-medium text-gray-800">Chuyển khoản ngân hàng</span>
-                                                            <p className="text-sm text-gray-600 mt-1">Chuyển khoản trước khi đến tiêm</p>
-                                                        </div>
-                                                    </div>
-                                                </label>
-
-                                                <label className="block p-4 border border-gray-300 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            type="radio"
-                                                            name="paymentMethod"
-                                                            value="momo"
-                                                            className="form-radio h-4 w-4 text-blue-600"
-                                                        />
-                                                        <div className="ml-3">
-                                                            <span className="font-medium text-gray-800">Thanh toán qua Momo</span>
-                                                            <p className="text-sm text-gray-600 mt-1">Thanh toán qua ví điện tử Momo</p>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-between mt-8">
-                                            <button
-                                                type="button"
-                                                onClick={() => setStep(1)}
-                                                className="border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-medium transition-colors"
-                                            >
-                                                Quay lại
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={handleCheckout}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                                            >
-                                                Xác nhận đặt lịch
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tóm tắt đơn hàng */}
-                            <div className="lg:col-span-1">
-                                <div className="bg-white rounded-xl shadow-lg overflow-hidden sticky top-24">
-                                    <div className="p-6 border-b border-gray-200">
-                                        <h2 className="text-xl font-bold text-gray-800">Tóm tắt đơn hàng</h2>
-                                    </div>
-
-                                    <div className="p-6">
-                                        <div className="space-y-4">
-                                            {cartItems.map((item) => (
-                                                <div key={item.id} className="flex justify-between pb-4 border-b border-gray-100">
-                                                    <div>
-                                                        <h3 className="font-medium text-gray-800">{item.name}</h3>
-                                                        <p className="text-sm text-gray-600">Số mũi: {item.doses}</p>
-                                                    </div>
-                                                    <div className="text-blue-600 font-medium">
-                                                        {formatPrice(item.price)}
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                            <div className="pt-4">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="font-medium text-gray-700">Tổng tiền:</span>
-                                                    <span className="text-xl font-bold text-blue-600">{formatPrice(totalPrice)}</span>
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-1">Đã bao gồm VAT</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    ) : renderStep3()}
                 </div>
             </div>
 

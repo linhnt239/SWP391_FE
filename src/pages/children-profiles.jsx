@@ -75,7 +75,7 @@ const ChildrenProfiles = () => {
             console.log("Fetching children with token:", token);
             console.log("User ID:", userId);
 
-            const response = await fetch(`/api/child-get/${userId}`, {
+            const response = await fetch(`/api/child-get/${userId}/user`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

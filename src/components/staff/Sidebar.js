@@ -27,7 +27,7 @@ const Sidebar = ({ activeSection, setActiveSection }) => {
                         className="rounded-full mr-2"
                     />
                     <div>
-                        <p className="text-sm">Nguyen Van C</p>
+                        <p className="text-sm">Staff 1</p>
                         <p className="text-xs">Staff ID: 001</p>
                     </div>
                 </div>
