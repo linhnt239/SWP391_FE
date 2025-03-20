@@ -131,7 +131,7 @@ const Staff = () => {
   const handleAddVaccine = async () => {
     if (
       !newVaccine.illnessName ||
-      !newVaccine.description ||
+      !newVaccine.descriptions ||
       newVaccine.ageLimit < 0
     ) {
       toast.error("Vui lòng điền đầy đủ thông tin hợp lệ!", {
@@ -157,7 +157,7 @@ const Staff = () => {
         },
         body: JSON.stringify({
           illnessName: newVaccine.illnessName,
-          description: newVaccine.description,
+          descriptions: newVaccine.descriptions,
           ageLimit: newVaccine.ageLimit,
         }),
       });
