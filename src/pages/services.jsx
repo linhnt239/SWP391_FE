@@ -123,10 +123,6 @@ const Services = () => {
                         <ul className="space-y-2 text-gray-700">
                             <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                Giá trên chưa bao gồm phí khám trước tiêm (50,000 VNĐ).
-                            </li>
-                            <li className="flex items-start">
-                                <span className="text-blue-500 mr-2">•</span>
                                 Vui lòng đặt lịch trước để được phục vụ tốt nhất.
                             </li>
                             <li className="flex items-start">

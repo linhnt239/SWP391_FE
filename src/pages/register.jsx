@@ -45,7 +45,7 @@ const Register = () => {
             newErrors.phone = 'Số điện thoại là bắt buộc';
         } else {
             // Validate số điện thoại: 9 chữ số, bắt đầu bằng 0
-            const phoneRegex = /^0\d{8}$/;
+            const phoneRegex = /^0\d{9}$/;
             if (!phoneRegex.test(formData.phone)) {
                 newErrors.phone = 'Vui lòng nhập lại số điện thoại (phải có 9 chữ số và bắt đầu bằng 0)';
             }
@@ -53,7 +53,7 @@ const Register = () => {
         if (!formData.dateOfBirth) {
             newErrors.dateOfBirth = 'Ngày sinh là bắt buộc';
         } else if (selectedDate > today) {
-            newErrors.dateOfBirth = 'Ngày sinh không được sau ngày hiện tại';
+            newErrors.dateOfBirth = 'Ngày sinh không hợp lệ';
         }
 
         setErrors(newErrors);

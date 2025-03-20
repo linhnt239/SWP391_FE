@@ -117,7 +117,7 @@ const Home = () => {
             </table>
           </div>
           <p className="text-center text-gray-600 mt-4">
-            * Giá trên chưa bao gồm phí khám trước tiêm (50,000 VNĐ). Vui lòng đặt lịch để được tư vấn chi tiết.
+            Vui lòng đặt lịch để được tư vấn chi tiết.
           </p>
         </div>
       </section>

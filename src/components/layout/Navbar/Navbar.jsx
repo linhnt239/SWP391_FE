@@ -42,11 +42,6 @@ const Navbar = () => {
                             Thông báo
                         </Link>
                     </li>
-                    <li>
-                        <Link href="/vaccination-reaction" className="text-blue-900 hover:text-blue-600">
-                            Phản ứng sau tiêm
-                        </Link>
-                    </li>
                 </ul>
             </div>
 

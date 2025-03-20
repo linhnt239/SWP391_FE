@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DefaultLayout from '@/components/layout/DefaultLayout';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import PaymentStep from '@/components/payment/PaymentStep';
+
 
 const Schedule = () => {
     const router = useRouter();
@@ -84,6 +84,10 @@ const Schedule = () => {
         if (vnp_ResponseCode === "00") {
             setPaymentSuccess(true);
             setStep(2); // Chuyển đến bước 3
+
+            // Xóa giỏ hàng từ localStorage sau khi thanh toán thành công
+            localStorage.removeItem('cart');
+
             // Xóa URL parameters
             window.history.replaceState({}, '', '/schedule');
         }
@@ -266,7 +270,7 @@ const Schedule = () => {
             localStorage.setItem('lastAppointment', JSON.stringify({
                 childName: checkoutData.childrenName,
                 appointmentDate: formData.preferredDate,
-                appointmentTime: formData.timeStart
+                appointmentTime: formData.preferredTime
             }));
 
             const response = await fetch(`/api/cart/checkout?userId=${userId}`, {
@@ -286,7 +290,10 @@ const Schedule = () => {
             const result = await response.text();
 
             if (result && result.startsWith('http')) {
-                // Chuyển hướng trực tiếp đến URL thanh toán mà không thêm returnUrl
+                // Sau khi API trả về URL thanh toán thành công
+                // Bạn có thể thêm mã để xóa giỏ hàng ở đây nếu muốn xóa trước khi chuyển hướng
+                // localStorage.removeItem('cart');
+
                 window.location.href = result;
             } else {
                 throw new Error('Invalid payment URL received');
@@ -296,29 +303,6 @@ const Schedule = () => {
             alert(`Đã xảy ra lỗi khi thanh toán: ${error.message}`);
         }
     };
-
-    // Cập nhật useEffect để xử lý kết quả thanh toán
-    useEffect(() => {
-        const checkPaymentResult = async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const vnp_ResponseCode = urlParams.get('vnp_ResponseCode');
-
-            // Chỉ xử lý khi có response code
-            if (vnp_ResponseCode) {
-                if (vnp_ResponseCode === "00") {
-                    setPaymentSuccess(true);
-                    setStep(2); // Chuyển đến bước 3
-                } else {
-                    alert('Thanh toán không thành công. Vui lòng thử lại.');
-                }
-
-                // Xóa query parameters
-                window.history.replaceState({}, '', '/schedule');
-            }
-        };
-
-        checkPaymentResult();
-    }, []);
 
     // Định dạng giá tiền
     const formatPrice = (price) => {
@@ -394,6 +378,25 @@ const Schedule = () => {
                         </div>
                     </div>
 
+                    {/* Lưu ý quan trọng */}
+                    <div className="bg-yellow-50 rounded-lg p-6 mb-6">
+                        <h3 className="text-lg font-semibold text-yellow-800 mb-3">Lưu ý quan trọng</h3>
+                        <ul className="space-y-2 text-gray-700">
+                            <li className="flex items-start">
+                                <svg className="w-5 h-5 text-yellow-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                Vui lòng đến trước giờ hẹn 15 phút
+                            </li>
+                            <li className="flex items-start">
+                                <svg className="w-5 h-5 text-yellow-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                Mang theo sổ tiêm chủng (nếu có)
+                            </li>
+                        </ul>
+                    </div>
+
                     {/* Nút điều hướng */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button
@@ -414,16 +417,45 @@ const Schedule = () => {
         }
 
         return (
-            <PaymentStep
-                formData={formData}
-                selectedChild={selectedChild}
-                cartItems={cartItems}
-                totalPrice={totalPrice}
-                onBack={() => setStep(1)}
-                onCheckout={handleCheckout}
-                formatPrice={formatPrice}
-                formatDate={formatDate}
-            />
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold mb-4">Xác nhận thông tin</h2>
+                {/* Hiển thị thông tin đã chọn */}
+                <div className="space-y-4">
+                    <div>
+                        <h3 className="font-semibold">Thông tin trẻ:</h3>
+                        <p>Tên: {selectedChild ? selectedChild.childrenName : formData.childName}</p>
+                        <p>Giới tính: {selectedChild ? selectedChild.gender : formData.gender}</p>
+                        <p>Ngày sinh: {selectedChild ? selectedChild.dateOfBirth : formData.dateOfBirth}</p>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold">Thời gian:</h3>
+                        <p>Ngày: {formData.preferredDate}</p>
+                        <p>Giờ: {formData.preferredTime}</p>
+                    </div>
+                    {formData.note && (
+                        <div>
+                            <h3 className="font-semibold">Ghi chú:</h3>
+                            <p>{formData.note}</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Nút điều hướng */}
+                <div className="flex justify-between mt-6">
+                    <button
+                        onClick={() => setStep(1)}
+                        className="px-4 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
+                    >
+                        Quay lại
+                    </button>
+                    <button
+                        onClick={handleCheckout}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                        Xác nhận và thanh toán
+                    </button>
+                </div>
+            </div>
         );
     };
 
@@ -563,7 +595,6 @@ const Schedule = () => {
                                             </div>
                                         ) : (
                                             <div className="text-center py-4 border border-dashed border-gray-300 rounded-lg">
-                                                <p className="text-gray-500 mb-2">Bạn chưa có hồ sơ trẻ nào</p>
                                                 <Link href="/children-profiles" className="text-blue-600 hover:text-blue-800 font-medium">
                                                     Quản lý hồ sơ trẻ
                                                 </Link>
