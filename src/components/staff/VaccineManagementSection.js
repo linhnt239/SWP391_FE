@@ -328,9 +328,8 @@ const VaccineManagementSection = ({
                     <div className="flex justify-center space-x-2">
                       <button
                         onClick={() => handleViewDetails(vaccine.vaccineId)}
-                        className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 ${fetchLoading ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
-                        disabled={fetchLoading}
+                        className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center ${fetchLoading[vaccine.vaccineId] ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={fetchLoading[vaccine.vaccineId]}
                       >
                         {fetchLoading[vaccine.vaccineId] ? (
                           <>
