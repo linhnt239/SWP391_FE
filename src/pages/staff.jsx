@@ -452,7 +452,7 @@ const Staff = () => {
         activeSection={activeSection}
         setActiveSection={setActiveSection}
       />
-      <div className="flex-1 p-6">
+      <div className="flex-1 pl-4">
         {activeSection === "overview" && (
           <OverviewSection
             vaccines={vaccines}

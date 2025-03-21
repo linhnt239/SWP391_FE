@@ -152,7 +152,7 @@ const AppointmentManagementSection = () => {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6">Quản lý lịch hẹn</h2>
 
             {/* Bảng hiển thị danh sách lịch hẹn */}
@@ -160,12 +160,6 @@ const AppointmentManagementSection = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            >
-                                Mã lịch hẹn
-                            </th>
                             <th
                                 scope="col"
                                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -202,9 +196,6 @@ const AppointmentManagementSection = () => {
                         {paginatedAppointments.length > 0 ? (
                             paginatedAppointments.map((appointment) => (
                                 <tr key={appointment.appointmentId}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {appointment.appointmentId.substring(0, 8)}...
-                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {appointment.childrenName || 'Không có tên'}
                                     </td>
@@ -278,7 +269,7 @@ const AppointmentManagementSection = () => {
 
             {/* Phân trang */}
             {totalPages > 1 && (
-                <div className="flex justify-center space-x-2 mt-4">
+                <div className="flex justify-center space-x-2">
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                         className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"

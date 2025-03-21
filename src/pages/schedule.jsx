@@ -602,7 +602,7 @@ const Schedule = () => {
                                         )}
 
                                         {/* Form điền thông tin trẻ mới */}
-                                        {(children.length === 0 || formData.childId === 'new') && (
+                                        {/* {(children.length === 0 || formData.childId === 'new') && (
                                             <div className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                                                 <h3 className="font-medium text-gray-800 mb-2">
                                                     {children.length === 0 ? 'Thông tin trẻ' : 'Thêm hồ sơ trẻ mới'}
@@ -687,7 +687,7 @@ const Schedule = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                        )}
+                                        )} */}
 
                                         <div className="border-t border-gray-200 pt-6 mt-6">
                                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Thông tin người đăng ký</h3>
