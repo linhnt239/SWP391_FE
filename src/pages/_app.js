@@ -11,12 +11,13 @@ export default function MyApp({ Component, pageProps }) {
                 position="top-right"
                 autoClose={3000}
                 hideProgressBar={false}
-                newestOnTop={false}
+                newestOnTop
                 closeOnClick
                 rtl={false}
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
+                theme="light"
             />
         </>
     );

@@ -103,30 +103,6 @@ const Notifications = () => {
     };
 
     // Xử lý việc đánh dấu đã đọc tất cả thông báo
-    const markAllAsRead = async () => {
-        if (!userId || !token) return;
-
-        try {
-            // API này cần được thay thế bằng API thực tế của bạn để đánh dấu đã đọc
-            const response = await fetch(`/api/notifications/mark-all-read/${userId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                // Cập nhật UI để hiển thị tất cả thông báo đã đọc
-                setNotifications(notifications.map(notif => ({
-                    ...notif,
-                    isRead: true
-                })));
-            }
-        } catch (error) {
-            console.error('Error marking notifications as read:', error);
-        }
-    };
 
     if (loading) {
         return (
@@ -152,12 +128,6 @@ const Notifications = () => {
                             <BiBell className="text-2xl text-blue-600" />
                             <span className="text-lg font-semibold">Tất cả thông báo</span>
                         </div>
-                        <button
-                            onClick={markAllAsRead}
-                            className="text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                            Đánh dấu tất cả đã đọc
-                        </button>
                     </div>
 
                     {notifications.length === 0 ? (
@@ -187,11 +157,6 @@ const Notifications = () => {
                                                 <BiTime className="mr-1" />
                                                 {formatDateTime(notification.createdAt)}
                                             </span>
-                                            {notification.isRead ? (
-                                                <BiCheck className="text-green-500 text-xl" />
-                                            ) : (
-                                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
