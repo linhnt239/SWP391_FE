@@ -107,7 +107,7 @@ const AppointmentDetailModal = ({
                                             <div key={index} className="flex justify-between items-center border-b border-green-100 pb-2">
                                                 <div className="flex items-center">
                                                     <FontAwesomeIcon icon={faVial} className="text-green-500 mr-2" />
-                                                    <span>{vaccine.vaccineName}</span>
+                                                    <span>{vaccine.doseName}</span>
                                                 </div>
                                                 <span className="font-semibold">{formatPrice(vaccine.price || 0)}</span>
                                             </div>

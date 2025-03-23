@@ -54,7 +54,7 @@ const CancelAppointmentModal = ({
                             </div>
                             <div>
                                 <p className="text-sm text-gray-600">Mũi vaccine:</p>
-                                <p className="font-medium">{calculateTotalVaccines(appointment)}</p>
+                                <p className="font-medium">{appointment.vaccineDetailsList[0].currentDose}</p>
                             </div>
                         </div>
                     </div>
