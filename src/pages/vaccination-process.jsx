@@ -3,12 +3,13 @@ import { useRouter } from 'next/navigation';
 import DefaultLayout from '@/components/layout/DefaultLayout';
 import AppointmentTable from '@/components/vaccination/AppointmentTable';
 import AppointmentDetailModal from '@/components/vaccination/AppointmentDetailModal';
-import FeedbackModal from '@/components/vaccination/FeedbackModal';
 import CancelAppointmentModal from '@/components/vaccination/CancelAppointmentModal';
 import EditTimeModal from '@/components/vaccination/EditTimeModal';
 import { useAppointments } from '@/hooks/useAppointments';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import { toast } from 'react-toastify';
+import FeedbackModal from '@/components/vaccination/FeedbackModal';
 
 const VaccinationProcess = () => {
     const router = useRouter();
@@ -28,7 +29,10 @@ const VaccinationProcess = () => {
         getStatusText,
         getStatusClass,
         canCancelAppointment,
-        canEditTime
+        canEditTime,
+        canFeedback,
+        setAppointments,
+        getFeedback
     } = useAppointments();
 
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -50,7 +54,7 @@ const VaccinationProcess = () => {
     };
 
     // Xử lý mở modal đánh giá
-    const handleFeedback = (appointment) => {
+    const handleOpenFeedback = (appointment) => {
         setSelectedAppointment(appointment);
         setShowFeedbackModal(true);
     };
@@ -83,20 +87,47 @@ const VaccinationProcess = () => {
 
     // Xử lý gửi đánh giá
     const handleSubmitFeedback = async () => {
-        if (!token) {
-            alert('Bạn chưa đăng nhập. Vui lòng đăng nhập để gửi đánh giá.');
+        if (!feedback.trim()) {
+            toast.error('Vui lòng nhập nội dung đánh giá');
             return;
         }
 
         try {
             setIsSubmitting(true);
+
+            // Gửi feedback
             await submitFeedback(selectedAppointment.appointmentId, rating, feedback);
-            alert('Cảm ơn bạn đã đánh giá!');
+
+            // Cập nhật state local trước khi refresh
+            const updatedAppointments = appointments.map(apt => {
+                if (apt.appointmentId === selectedAppointment.appointmentId) {
+                    return {
+                        ...apt,
+                        feedbacks: [{
+                            rating: rating.toString(),
+                            context: feedback,
+                            createAt: new Date().toISOString()
+                        }]
+                    };
+                }
+                return apt;
+            });
+
+            // Đóng modal và reset form
             setShowFeedbackModal(false);
+            setFeedback('');
+            setRating(5);
+
+            // Cập nhật state ngay lập tức
+            setAppointments(updatedAppointments);
+
+            // Sau đó mới refresh từ server
             await refreshAppointments();
+
+            toast.success('Gửi đánh giá thành công!');
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            alert('Có lỗi xảy ra khi gửi đánh giá');
+            toast.error('Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.');
         } finally {
             setIsSubmitting(false);
         }
@@ -105,24 +136,24 @@ const VaccinationProcess = () => {
     // Xử lý hủy lịch hẹn
     const handleSubmitCancelAppointment = async () => {
         if (!token) {
-            alert('Bạn chưa đăng nhập. Vui lòng đăng nhập để hủy lịch hẹn.');
+            toast.error('Bạn chưa đăng nhập. Vui lòng đăng nhập để hủy lịch hẹn.');
             return;
         }
 
         if (!cancelReason.trim()) {
-            alert('Vui lòng nhập lý do hủy lịch hẹn.');
+            toast.error('Vui lòng nhập lý do hủy lịch hẹn.');
             return;
         }
 
         try {
             setIsSubmitting(true);
             await submitCancelAppointment(selectedAppointment.appointmentId, cancelReason);
-            alert('Hủy lịch hẹn thành công!');
+            toast.success('Hủy lịch hẹn thành công!');
             setShowCancelModal(false);
             await refreshAppointments();
         } catch (error) {
             console.error('Error cancelling appointment:', error);
-            alert('Có lỗi xảy ra khi hủy lịch hẹn. Vui lòng thử lại sau.');
+            toast.error('Có lỗi xảy ra khi hủy lịch hẹn. Vui lòng thử lại sau.');
         } finally {
             setIsSubmitting(false);
         }
@@ -131,12 +162,12 @@ const VaccinationProcess = () => {
     // Xử lý cập nhật giờ hẹn
     const handleSubmitEditTime = async () => {
         if (!token) {
-            alert('Bạn chưa đăng nhập. Vui lòng đăng nhập để chỉnh sửa lịch hẹn.');
+            toast.error('Bạn chưa đăng nhập. Vui lòng đăng nhập để chỉnh sửa lịch hẹn.');
             return;
         }
 
         if (selectedAppointment.status !== 'Pending') {
-            alert('Chỉ lịch hẹn có trạng thái "Chờ xác nhận" mới có thể chỉnh sửa giờ hẹn.');
+            toast.error('Chỉ lịch hẹn có trạng thái "Chờ xác nhận" mới có thể chỉnh sửa giờ hẹn.');
             setShowEditTimeModal(false);
             return;
         }
@@ -144,12 +175,12 @@ const VaccinationProcess = () => {
         try {
             setIsEditingTime(true);
             await submitEditTime(selectedAppointment, editedTime);
-            alert('Cập nhật giờ hẹn thành công!');
+            toast.success('Cập nhật giờ hẹn thành công!');
             setShowEditTimeModal(false);
             await refreshAppointments();
         } catch (error) {
             console.error('Error updating appointment time:', error);
-            alert('Có lỗi xảy ra khi cập nhật giờ hẹn. Vui lòng thử lại sau.');
+            toast.error('Có lỗi xảy ra khi cập nhật giờ hẹn. Vui lòng thử lại sau.');
         } finally {
             setIsEditingTime(false);
         }
@@ -199,8 +230,9 @@ const VaccinationProcess = () => {
                         getStatusClass={getStatusClass}
                         canCancelAppointment={canCancelAppointment}
                         canEditTime={canEditTime}
-                        onViewDetail={handleViewDetail}
-                        onFeedback={handleFeedback}
+                        canFeedback={canFeedback}
+                        onOpenDetail={handleViewDetail}
+                        onOpenFeedback={handleOpenFeedback}
                         onEditTime={handleEditTime}
                         onCancelAppointment={handleCancelAppointment}
                     />
@@ -226,13 +258,18 @@ const VaccinationProcess = () => {
 
                 {showFeedbackModal && selectedAppointment && (
                     <FeedbackModal
-                        rating={rating}
-                        feedback={feedback}
-                        isSubmitting={isSubmitting}
-                        onRatingChange={setRating}
-                        onFeedbackChange={(e) => setFeedback(e.target.value)}
+                        show={showFeedbackModal}
+                        onClose={() => {
+                            setShowFeedbackModal(false);
+                            setFeedback('');
+                            setRating(5);
+                        }}
                         onSubmit={handleSubmitFeedback}
-                        onClose={() => setShowFeedbackModal(false)}
+                        rating={rating}
+                        setRating={setRating}
+                        feedback={feedback}
+                        setFeedback={setFeedback}
+                        isSubmitting={isSubmitting}
                     />
                 )}
 

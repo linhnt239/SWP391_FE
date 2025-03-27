@@ -15,7 +15,7 @@ const FeedbackSection = () => {
             const token = localStorage.getItem("token");
             if (!token) throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
 
-            const response = await fetch('/api/all', {
+            const response = await fetch('/api/feedback-all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -23,7 +23,6 @@ const FeedbackSection = () => {
                 },
             });
 
-            console.log('Response Status:', response.status);
             if (!response.ok) {
                 throw new Error(`Không thể lấy dữ liệu feedback: ${response.status}`);
             }
@@ -32,10 +31,14 @@ const FeedbackSection = () => {
             console.log('API Data:', data);
 
             setFeedbacks(data.map(item => ({
-                id: item.id || item._id,
-                user: item.user || item.email || 'Unknown',
-                rating: item.rating || 0,
-                comment: item.comment || 'Không có bình luận'
+                id: item.feedbackId,
+                userId: item.userId,
+                username: item.username,
+                appointmentId: item.appointmentsId,
+                rating: item.rating,
+                comment: item.context,
+                createdAt: item.createAt,
+                updatedAt: item.updateAt
             })));
         } catch (err) {
             console.error('Fetch Error:', err);
@@ -89,8 +92,8 @@ const FeedbackSection = () => {
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold text-blue-900 mb-4">Feedback</h2>
-            
+            <h2 className="text-2xl font-semibold text-blue-900 mb-4">Quản lý Feedback</h2>
+
             {loading && <p className="text-center">Đang tải...</p>}
             {error && <p className="text-red-500 text-center">{error}</p>}
 
@@ -99,23 +102,16 @@ const FeedbackSection = () => {
                     <div className="grid grid-cols-4 gap-4 text-center font-semibold bg-gray-200 p-2 rounded-t-md">
                         <span>Người dùng</span>
                         <span>Đánh giá</span>
-                        <span>Bình luận</span>
-                        <span>Hành động</span>
+                        <span>Nội dung</span>
+                        <span>Thời gian</span>
                     </div>
                     <ul className="space-y-2">
                         {feedbacks.map((feedback) => (
                             <li key={feedback.id} className="grid grid-cols-4 gap-4 items-center text-center py-2 border-b border-gray-200">
-                                <span>{feedback.user}</span>
-                                <span>{feedback.rating}/5</span>
+                                <span>{feedback.username || 'Ẩn danh'}</span>
+                                <span>{feedback.rating} ⭐</span>
                                 <span>{feedback.comment}</span>
-                                <div className="flex justify-center">
-                                    <button
-                                        onClick={() => handleRespondFeedback(feedback.id)}
-                                        className="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700"
-                                    >
-                                        Phản hồi
-                                    </button>
-                                </div>
+                                <span>{new Date(feedback.createdAt).toLocaleDateString('vi-VN')}</span>
                             </li>
                         ))}
                     </ul>

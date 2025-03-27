@@ -1,19 +1,76 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faEye, faClock, faTimes } from '@fortawesome/free-solid-svg-icons';
+import PropTypes from 'prop-types';
+import { useAppointments } from '../../hooks/useAppointments';
 
 const AppointmentTable = ({
     appointments,
     formatDate,
+    calculateTotalVaccines,
     getStatusText,
     getStatusClass,
     canCancelAppointment,
     canEditTime,
+    canFeedback,
     onViewDetail,
     onFeedback,
     onEditTime,
-    onCancelAppointment
+    onCancelAppointment,
+    onOpenFeedback,
+    onOpenDetail
 }) => {
+    const { getFeedback } = useAppointments();
+    const [appointmentFeedbacks, setAppointmentFeedbacks] = useState({});
+
+    // Fetch feedback cho mỗi appointment khi component mount
+    useEffect(() => {
+        const fetchFeedbacks = async () => {
+            const feedbacksMap = {};
+            for (const appointment of appointments) {
+                try {
+                    const feedback = await getFeedback(appointment.appointmentId);
+                    if (feedback && feedback.length > 0) {
+                        feedbacksMap[appointment.appointmentId] = feedback[0];
+                    }
+                } catch (error) {
+                    console.error(`Error fetching feedback for appointment ${appointment.appointmentId}:`, error);
+                }
+            }
+            setAppointmentFeedbacks(feedbacksMap);
+        };
+
+        fetchFeedbacks();
+    }, [appointments]);
+
+    const renderFeedbackColumn = (appointment) => {
+        const isCompleted = getStatusText(appointment.status) === 'Hoàn thành';
+
+        // Kiểm tra feedback từ dữ liệu appointment
+        if (appointment.feedbacks && appointment.feedbacks.length > 0) {
+            const rating = appointment.feedbacks[0].rating;
+            return (
+                <div className="flex items-center">
+                    <span className="text-yellow-400">★</span>
+                    <span>{rating}/5</span>
+                </div>
+            );
+        }
+
+        if (isCompleted) {
+            return (
+                <button
+                    onClick={() => onOpenFeedback(appointment)}
+                    className="text-blue-600 hover:text-blue-800"
+                >
+                    Đánh giá
+                </button>
+            );
+        }
+
+        return <span className="text-gray-500">Chưa đánh giá</span>;
+    };
+
     return (
         <div className="overflow-x-auto">
             <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg">
@@ -52,58 +109,39 @@ const AppointmentTable = ({
                                 </span>
                             </td>
                             <td className="px-6 py-4">
-                                {appointment.feedbacks && appointment.feedbacks.length > 0 ? (
-                                    <div className="flex items-center">
-                                        <FontAwesomeIcon icon={faStar} className="text-yellow-400 mr-1" />
-                                        <span>{appointment.feedbacks[0].rating}/5</span>
-                                    </div>
-                                ) : (
-                                    <span className="text-gray-500">Chưa đánh giá</span>
-                                )}
+                                {renderFeedbackColumn(appointment)}
                             </td>
-                            <td className="px-6 py-4 flex gap-2">
-                                <button
-                                    onClick={() => onViewDetail(appointment)}
-                                    className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center"
-                                    title="Xem chi tiết"
-                                >
-                                    <FontAwesomeIcon icon={faEye} className="mr-1" />
-                                    Chi tiết
-                                </button>
+                            <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                                <div className="flex justify-start space-x-2">
+                                    <button
+                                        onClick={() => onViewDetail(appointment)}
+                                        className="text-blue-600 hover:text-blue-900"
+                                    >
+                                        Chi tiết
+                                    </button>
 
-                                {appointment.status === 'COMPLETED' &&
-                                    (!appointment.feedbacks || appointment.feedbacks.length === 0) && (
+                                    {canEditTime(appointment) && (
                                         <button
-                                            onClick={() => onFeedback(appointment)}
-                                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center"
-                                            title="Đánh giá"
+                                            onClick={() => onEditTime(appointment)}
+                                            className="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 flex items-center"
+                                            title="Chỉnh sửa giờ hẹn"
                                         >
-                                            <FontAwesomeIcon icon={faStar} className="mr-1" />
-                                            Đánh giá
+                                            <FontAwesomeIcon icon={faClock} className="mr-1" />
+                                            Sửa giờ
                                         </button>
                                     )}
 
-                                {canEditTime(appointment) && (
-                                    <button
-                                        onClick={() => onEditTime(appointment)}
-                                        className="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 flex items-center"
-                                        title="Chỉnh sửa giờ hẹn"
-                                    >
-                                        <FontAwesomeIcon icon={faClock} className="mr-1" />
-                                        Sửa giờ
-                                    </button>
-                                )}
-
-                                {canCancelAppointment(appointment) && (
-                                    <button
-                                        onClick={() => onCancelAppointment(appointment)}
-                                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center"
-                                        title="Hủy lịch hẹn"
-                                    >
-                                        <FontAwesomeIcon icon={faTimes} className="mr-1" />
-                                        Hủy lịch
-                                    </button>
-                                )}
+                                    {canCancelAppointment(appointment) && (
+                                        <button
+                                            onClick={() => onCancelAppointment(appointment)}
+                                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center"
+                                            title="Hủy lịch hẹn"
+                                        >
+                                            <FontAwesomeIcon icon={faTimes} className="mr-1" />
+                                            Hủy lịch
+                                        </button>
+                                    )}
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -111,6 +149,12 @@ const AppointmentTable = ({
             </table>
         </div>
     );
+};
+
+AppointmentTable.propTypes = {
+    appointments: PropTypes.array.isRequired,
+    onOpenFeedback: PropTypes.func.isRequired,
+    onOpenDetail: PropTypes.func.isRequired
 };
 
 export default AppointmentTable; 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { toast } from 'react-toastify';
 
 export const useAppointments = () => {
     const [appointments, setAppointments] = useState([]);
@@ -101,23 +102,34 @@ export const useAppointments = () => {
     };
 
     // Hàm gửi đánh giá
-    const submitFeedback = async (appointmentId, rating, comment) => {
-        if (!token) throw new Error('Unauthorized');
-
-        const response = await fetch(`/api/appointments/${appointmentId}/feedback`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ rating, comment })
-        });
-
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+    const submitFeedback = async (appointmentId, rating, feedback) => {
+        if (!token || !userId) {
+            throw new Error('Bạn cần đăng nhập để gửi đánh giá');
         }
 
-        return await response.json();
+        try {
+            const response = await fetch(`/api/feedback-create/${userId}/${appointmentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    rating: rating.toString(),
+                    context: feedback
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể gửi đánh giá');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            throw error;
+        }
     };
 
     // Hàm hủy lịch hẹn
@@ -277,7 +289,7 @@ export const useAppointments = () => {
                 return 'Đã hủy';
             case 'Pending':
                 return 'Chờ xác nhận';
-            case 'COMPLETED':
+            case 'Completed':
                 return 'Hoàn thành';
             default:
                 if (status && (status.toLowerCase().includes('hủy') || status.toLowerCase().includes('cancel'))) {
@@ -299,7 +311,7 @@ export const useAppointments = () => {
                 return 'bg-red-100 text-red-800';
             case 'Pending':
                 return 'bg-yellow-100 text-yellow-800';
-            case 'COMPLETED':
+            case 'Completed':
                 return 'bg-green-100 text-green-800';
             default:
                 if (status && (status.toLowerCase().includes('hủy') || status.toLowerCase().includes('cancel'))) {
@@ -326,6 +338,39 @@ export const useAppointments = () => {
         await fetchAppointments();
     };
 
+    // Thêm vào các hàm hiện có
+    const canFeedback = (status) => {
+        return status === 'Completed';
+    };
+
+    // Thêm hàm getFeedback vào hook useAppointments
+    const getFeedback = async (appointmentId) => {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        try {
+            const response = await fetch(`/api/feedbacks-getByAppointmentId/${appointmentId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    console.warn('Unauthorized request for feedback');
+                    return null;
+                }
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error getting feedback:', error);
+            return null;
+        }
+    };
+
     return {
         appointments,
         isLoading,
@@ -341,6 +386,8 @@ export const useAppointments = () => {
         getStatusText,
         getStatusClass,
         canCancelAppointment,
-        canEditTime
+        canEditTime,
+        canFeedback,
+        getFeedback,
     };
 }; 
