@@ -1,4 +1,3 @@
-// src/components/staff/FeedbackSection.js
 import React, { useState, useEffect } from 'react';
 
 const FeedbackSection = () => {
@@ -7,7 +6,8 @@ const FeedbackSection = () => {
     const [responseText, setResponseText] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
+    const [currentPage, setCurrentPage] = useState(1); // State cho trang hiện tại
+    const feedbacksPerPage = 10; // Số feedback mỗi trang
 
     const fetchFeedbacks = async () => {
         setLoading(true);
@@ -63,7 +63,6 @@ const FeedbackSection = () => {
             const token = localStorage.getItem("token");
             if (!token) throw new Error('Không tìm thấy token');
 
-            // Thay đổi endpoint thực tế tại đây
             const response = await fetch(`/api/feedback/${selectedFeedbackId}/respond`, {
                 method: 'POST',
                 headers: {
@@ -90,6 +89,17 @@ const FeedbackSection = () => {
         fetchFeedbacks();
     }, []);
 
+    // Tính toán số trang và feedback hiển thị trên trang hiện tại
+    const totalPages = Math.ceil(feedbacks.length / feedbacksPerPage);
+    const indexOfLastFeedback = currentPage * feedbacksPerPage;
+    const indexOfFirstFeedback = indexOfLastFeedback - feedbacksPerPage;
+    const currentFeedbacks = feedbacks.slice(indexOfFirstFeedback, indexOfLastFeedback);
+
+    // Hàm chuyển trang
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold text-blue-900 mb-4">Quản lý Feedback</h2>
@@ -106,7 +116,7 @@ const FeedbackSection = () => {
                         <span>Thời gian</span>
                     </div>
                     <ul className="space-y-2">
-                        {feedbacks.map((feedback) => (
+                        {currentFeedbacks.map((feedback) => (
                             <li key={feedback.id} className="grid grid-cols-4 gap-4 items-center text-center py-2 border-b border-gray-200">
                                 <span>{feedback.username || 'Ẩn danh'}</span>
                                 <span>{feedback.rating} ⭐</span>
@@ -115,6 +125,38 @@ const FeedbackSection = () => {
                             </li>
                         ))}
                     </ul>
+
+                    {/* Phân trang */}
+                    {totalPages > 1 && (
+                        <div className="mt-4 flex justify-center space-x-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                            >
+                                Trước
+                            </button>
+                            {Array.from({ length: totalPages }, (_, index) => (
+                                <button
+                                    key={index + 1}
+                                    onClick={() => handlePageChange(index + 1)}
+                                    className={`px-3 py-1 rounded ${
+                                        currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    {index + 1}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                            >
+                                Sau
+                            </button>
+                        </div>
+                    )}
+
                     {selectedFeedbackId && (
                         <div className="mt-4 p-4 border border-gray-300 rounded-md">
                             <textarea
