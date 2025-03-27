@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faEye, faClock, faTimes } from '@fortawesome/free-solid-svg-icons';
 import PropTypes from 'prop-types';
@@ -7,57 +7,117 @@ import { useAppointments } from '../../hooks/useAppointments';
 const AppointmentTable = ({
     appointments,
     formatDate,
-    calculateTotalVaccines,
     getStatusText,
     getStatusClass,
     canCancelAppointment,
     canEditTime,
     canFeedback,
-    onViewDetail,
-    onFeedback,
-    onEditTime,
-    onCancelAppointment,
+    onOpenDetail,
     onOpenFeedback,
-    onOpenDetail
+    onEditTime,
+    onCancelAppointment
 }) => {
     const { getFeedback } = useAppointments();
-    const [appointmentFeedbacks, setAppointmentFeedbacks] = useState({});
+    const [feedbacksMap, setFeedbacksMap] = useState({});
+    const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
+    const fetchedAppointmentsRef = useRef(new Set());
 
-    // Fetch feedback cho mỗi appointment khi component mount
+    // Logging khi component mount và update
     useEffect(() => {
-        const fetchFeedbacks = async () => {
-            const feedbacksMap = {};
-            for (const appointment of appointments) {
-                try {
-                    const feedback = await getFeedback(appointment.appointmentId);
-                    if (feedback && feedback.length > 0) {
-                        feedbacksMap[appointment.appointmentId] = feedback[0];
+        console.log("AppointmentTable mounted/updated");
+        console.log("Current appointments:", appointments);
+        console.log("Current feedbacksMap:", feedbacksMap);
+        return () => {
+            console.log("AppointmentTable unmounted");
+        };
+    }, [appointments, feedbacksMap]);
+
+    // Tải tất cả feedback một lần duy nhất khi component mount
+    useEffect(() => {
+        const getAllFeedbacks = async () => {
+            console.log("Starting to fetch all feedbacks...");
+            setLoadingFeedbacks(true);
+
+            try {
+                // Gọi API để lấy tất cả feedbacks
+                const response = await fetch(`/api/feedback-all`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
                     }
-                } catch (error) {
-                    console.error(`Error fetching feedback for appointment ${appointment.appointmentId}:`, error);
+                });
+
+                if (!response.ok) {
+                    console.error(`Error fetching all feedbacks: ${response.status}`);
+                    return;
                 }
+
+                const allFeedbacks = await response.json();
+                console.log("All feedbacks from API:", allFeedbacks);
+
+                // Tạo map từ appointmentId đến danh sách feedbacks
+                const feedbacks = {};
+                allFeedbacks.forEach(feedback => {
+                    const appointmentId = feedback.appointmentsId;
+                    if (!feedbacks[appointmentId]) {
+                        feedbacks[appointmentId] = [];
+                    }
+                    feedbacks[appointmentId].push(feedback);
+                });
+
+                console.log("Processed feedbacks map:", feedbacks);
+
+                // Cập nhật state
+                setFeedbacksMap(feedbacks);
+
+                // Log xem có appointment nào đã có feedback chưa
+                appointments.forEach(appointment => {
+                    const hasFeedback = feedbacks[appointment.appointmentId] &&
+                        feedbacks[appointment.appointmentId].length > 0;
+                    console.log(`Appointment ${appointment.appointmentId} has feedback: ${hasFeedback}`);
+                    if (hasFeedback) {
+                        console.log(`Feedback for appointment ${appointment.appointmentId}:`,
+                            feedbacks[appointment.appointmentId]);
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching all feedbacks:', error);
+            } finally {
+                setLoadingFeedbacks(false);
             }
-            setAppointmentFeedbacks(feedbacksMap);
         };
 
-        fetchFeedbacks();
+        getAllFeedbacks();
+    }, []); // Chỉ chạy một lần khi component mount
+
+    // Log khi appointments thay đổi
+    useEffect(() => {
+        console.log("Appointments changed:", appointments);
     }, [appointments]);
 
     const renderFeedbackColumn = (appointment) => {
-        const isCompleted = getStatusText(appointment.status) === 'Hoàn thành';
+        console.log(`Rendering feedback column for appointment ${appointment.appointmentId}`);
+        console.log(`Status: ${appointment.status}, StatusText: ${getStatusText(appointment.status)}`);
 
-        // Kiểm tra feedback từ dữ liệu appointment
-        if (appointment.feedbacks && appointment.feedbacks.length > 0) {
-            const rating = appointment.feedbacks[0].rating;
+        const isCompleted = getStatusText(appointment.status) === 'Hoàn thành';
+        const hasFeedback = feedbacksMap[appointment.appointmentId] &&
+            feedbacksMap[appointment.appointmentId].length > 0;
+
+        console.log(`Appointment ${appointment.appointmentId}: isCompleted=${isCompleted}, hasFeedback=${hasFeedback}`);
+
+        if (hasFeedback) {
+            const feedback = feedbacksMap[appointment.appointmentId][0];
+            console.log(`Showing rating for appointment ${appointment.appointmentId}:`, feedback);
             return (
                 <div className="flex items-center">
                     <span className="text-yellow-400">★</span>
-                    <span>{rating}/5</span>
+                    <span>{feedback.rating}/5</span>
                 </div>
             );
         }
 
         if (isCompleted) {
+            console.log(`Showing "Đánh giá" button for appointment ${appointment.appointmentId}`);
             return (
                 <button
                     onClick={() => onOpenFeedback(appointment)}
@@ -68,11 +128,23 @@ const AppointmentTable = ({
             );
         }
 
+        console.log(`Showing "Chưa đánh giá" for appointment ${appointment.appointmentId}`);
         return <span className="text-gray-500">Chưa đánh giá</span>;
     };
 
     return (
         <div className="overflow-x-auto">
+            <pre className="text-xs bg-gray-100 p-2 mb-2 overflow-auto hidden">
+                {JSON.stringify({
+                    appointments: appointments.map(a => ({
+                        id: a.appointmentId,
+                        status: a.status,
+                        statusText: getStatusText(a.status),
+                        hasFeedback: feedbacksMap[a.appointmentId] ? true : false
+                    })),
+                    feedbacksMap
+                }, null, 2)}
+            </pre>
             <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg">
                 <thead className="bg-blue-600 text-white">
                     <tr>
@@ -109,17 +181,20 @@ const AppointmentTable = ({
                                 </span>
                             </td>
                             <td className="px-6 py-4">
-                                {renderFeedbackColumn(appointment)}
+                                {loadingFeedbacks ? (
+                                    <span className="text-gray-400">Đang tải...</span>
+                                ) : (
+                                    renderFeedbackColumn(appointment)
+                                )}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex justify-start space-x-2">
                                     <button
-                                        onClick={() => onViewDetail(appointment)}
+                                        onClick={() => onOpenDetail(appointment)}
                                         className="text-blue-600 hover:text-blue-900"
                                     >
                                         Chi tiết
                                     </button>
-
                                     {canEditTime(appointment) && (
                                         <button
                                             onClick={() => onEditTime(appointment)}
@@ -130,7 +205,6 @@ const AppointmentTable = ({
                                             Sửa giờ
                                         </button>
                                     )}
-
                                     {canCancelAppointment(appointment) && (
                                         <button
                                             onClick={() => onCancelAppointment(appointment)}
@@ -153,8 +227,16 @@ const AppointmentTable = ({
 
 AppointmentTable.propTypes = {
     appointments: PropTypes.array.isRequired,
+    formatDate: PropTypes.func.isRequired,
+    getStatusText: PropTypes.func.isRequired,
+    getStatusClass: PropTypes.func.isRequired,
+    canCancelAppointment: PropTypes.func.isRequired,
+    canEditTime: PropTypes.func.isRequired,
+    canFeedback: PropTypes.func.isRequired,
+    onOpenDetail: PropTypes.func.isRequired,
     onOpenFeedback: PropTypes.func.isRequired,
-    onOpenDetail: PropTypes.func.isRequired
+    onEditTime: PropTypes.func,
+    onCancelAppointment: PropTypes.func
 };
 
 export default AppointmentTable; 

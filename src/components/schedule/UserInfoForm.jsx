@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import ChildProfileSelector from './ChildProfileSelector';
-import ChildProfileForm from './ChildProfileForm';
 import ParentInfoForm from './ParentInfoForm';
 import AppointmentTimeForm from './AppointmentTimeForm';
 
@@ -85,13 +84,6 @@ const UserInfoForm = ({
                     </div>
                 )}
 
-                {/* Form điền thông tin trẻ mới */}
-                {(children.length === 0 || !formData.useExistingProfile) && (
-                    <ChildProfileForm
-                        formData={formData}
-                        handleChange={handleChange}
-                    />
-                )}
 
                 {/* Thông tin người đăng ký */}
                 <ParentInfoForm
@@ -131,7 +123,7 @@ const UserInfoForm = ({
                         type="submit"
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                     >
-                        Xem điều khoản và thanh toán
+                        Thanh toán
                     </button>
                 </div>
             </form>

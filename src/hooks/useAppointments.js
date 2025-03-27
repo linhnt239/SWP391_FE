@@ -121,9 +121,30 @@ export const useAppointments = () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Không thể gửi đánh giá');
+                const errorText = await response.text();
+                console.error("API Error Response:", errorText);
+                throw new Error(`API error: ${response.status}`);
             }
+
+            // Cập nhật state appointments sau khi gửi feedback thành công
+            setAppointments(prevAppointments =>
+                prevAppointments.map(apt => {
+                    if (apt.appointmentId === appointmentId) {
+                        return {
+                            ...apt,
+                            feedbacks: [
+                                ...(apt.feedbacks || []),
+                                {
+                                    rating: rating.toString(),
+                                    context: feedback,
+                                    createAt: new Date().toISOString()
+                                }
+                            ]
+                        };
+                    }
+                    return apt;
+                })
+            );
 
             return await response.json();
         } catch (error) {
@@ -345,10 +366,12 @@ export const useAppointments = () => {
 
     // Thêm hàm getFeedback vào hook useAppointments
     const getFeedback = async (appointmentId) => {
-        const token = localStorage.getItem('token');
         if (!token) return null;
 
         try {
+            console.log(`Fetching feedback for appointment ${appointmentId}`);
+
+            // Sử dụng endpoint chính xác từ Swagger
             const response = await fetch(`/api/feedbacks-getByAppointmentId/${appointmentId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -357,16 +380,15 @@ export const useAppointments = () => {
             });
 
             if (!response.ok) {
-                if (response.status === 401) {
-                    console.warn('Unauthorized request for feedback');
-                    return null;
-                }
-                throw new Error(`API error: ${response.status}`);
+                console.error(`Error fetching feedback for appointment ${appointmentId}: ${response.status}`);
+                return null;
             }
 
-            return await response.json();
+            const data = await response.json();
+            console.log(`Feedback data for appointment ${appointmentId}:`, data);
+            return data;
         } catch (error) {
-            console.error('Error getting feedback:', error);
+            console.error(`Error fetching feedback for appointment ${appointmentId}:`, error);
             return null;
         }
     };

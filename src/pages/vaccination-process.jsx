@@ -47,26 +47,51 @@ const VaccinationProcess = () => {
     const [editedTime, setEditedTime] = useState({ hour: 0, minute: 0, second: 0, nano: 0 });
     const [isEditingTime, setIsEditingTime] = useState(false);
 
-    // Xử lý mở modal xem chi tiết
-    const handleViewDetail = (appointment) => {
+    const handleSubmitFeedback = async () => {
+        if (!feedback.trim()) {
+            toast.error('Vui lòng nhập nội dung đánh giá');
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+
+            // Gửi feedback
+            await submitFeedback(selectedAppointment.appointmentId, rating, feedback);
+
+            // Đóng modal và reset form
+            setShowFeedbackModal(false);
+            setFeedback('');
+            setRating(5);
+
+            // Refresh lại danh sách để cập nhật UI
+            await refreshAppointments();
+
+            toast.success('Gửi đánh giá thành công!');
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            toast.error('Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleOpenDetail = (appointment) => {
         setSelectedAppointment(appointment);
         setShowDetailModal(true);
     };
 
-    // Xử lý mở modal đánh giá
     const handleOpenFeedback = (appointment) => {
         setSelectedAppointment(appointment);
         setShowFeedbackModal(true);
     };
 
-    // Xử lý mở modal hủy lịch hẹn
     const handleCancelAppointment = (appointment) => {
         setSelectedAppointment(appointment);
         setCancelReason('');
         setShowCancelModal(true);
     };
 
-    // Xử lý mở modal chỉnh sửa giờ hẹn
     const handleEditTime = (appointment) => {
         setSelectedAppointment(appointment);
 
@@ -85,55 +110,6 @@ const VaccinationProcess = () => {
         setShowEditTimeModal(true);
     };
 
-    // Xử lý gửi đánh giá
-    const handleSubmitFeedback = async () => {
-        if (!feedback.trim()) {
-            toast.error('Vui lòng nhập nội dung đánh giá');
-            return;
-        }
-
-        try {
-            setIsSubmitting(true);
-
-            // Gửi feedback
-            await submitFeedback(selectedAppointment.appointmentId, rating, feedback);
-
-            // Cập nhật state local trước khi refresh
-            const updatedAppointments = appointments.map(apt => {
-                if (apt.appointmentId === selectedAppointment.appointmentId) {
-                    return {
-                        ...apt,
-                        feedbacks: [{
-                            rating: rating.toString(),
-                            context: feedback,
-                            createAt: new Date().toISOString()
-                        }]
-                    };
-                }
-                return apt;
-            });
-
-            // Đóng modal và reset form
-            setShowFeedbackModal(false);
-            setFeedback('');
-            setRating(5);
-
-            // Cập nhật state ngay lập tức
-            setAppointments(updatedAppointments);
-
-            // Sau đó mới refresh từ server
-            await refreshAppointments();
-
-            toast.success('Gửi đánh giá thành công!');
-        } catch (error) {
-            console.error('Error submitting feedback:', error);
-            toast.error('Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // Xử lý hủy lịch hẹn
     const handleSubmitCancelAppointment = async () => {
         if (!token) {
             toast.error('Bạn chưa đăng nhập. Vui lòng đăng nhập để hủy lịch hẹn.');
@@ -159,7 +135,6 @@ const VaccinationProcess = () => {
         }
     };
 
-    // Xử lý cập nhật giờ hẹn
     const handleSubmitEditTime = async () => {
         if (!token) {
             toast.error('Bạn chưa đăng nhập. Vui lòng đăng nhập để chỉnh sửa lịch hẹn.');
@@ -194,7 +169,6 @@ const VaccinationProcess = () => {
         );
     }
 
-    // Nếu không có thông tin người dùng, hiển thị thông báo đăng nhập
     if (!userId || !token) {
         return (
             <DefaultLayout>
@@ -231,14 +205,13 @@ const VaccinationProcess = () => {
                         canCancelAppointment={canCancelAppointment}
                         canEditTime={canEditTime}
                         canFeedback={canFeedback}
-                        onOpenDetail={handleViewDetail}
+                        onOpenDetail={handleOpenDetail}
                         onOpenFeedback={handleOpenFeedback}
                         onEditTime={handleEditTime}
                         onCancelAppointment={handleCancelAppointment}
                     />
                 )}
 
-                {/* Các Modal Components */}
                 {showDetailModal && selectedAppointment && (
                     <AppointmentDetailModal
                         appointment={selectedAppointment}
