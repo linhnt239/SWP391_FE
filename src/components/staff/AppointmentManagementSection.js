@@ -92,7 +92,7 @@ const AppointmentManagementSection = () => {
 
         try {
             const response = await fetch(`/api/appointments/${appointmentId}/mark-successful`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -274,9 +274,8 @@ const AppointmentManagementSection = () => {
                         <button
                             key={index + 1}
                             onClick={() => handlePageChange(index + 1)}
-                            className={`px-3 py-1 rounded ${
-                                currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
-                            }`}
+                            className={`px-3 py-1 rounded ${currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
+                                }`}
                         >
                             {index + 1}
                         </button>

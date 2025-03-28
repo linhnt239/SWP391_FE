@@ -97,6 +97,42 @@ const UserInfoForm = ({
                     handleChange={handleChange}
                 />
 
+                {/* Phương thức thanh toán */}
+                <div className="mt-6">
+                    <h3 className="font-medium text-gray-800 mb-3">Phương thức thanh toán</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="border rounded-lg p-4 flex items-center cursor-pointer hover:border-blue-500 transition-colors">
+                            <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="online"
+                                checked={formData.paymentMethod === 'online'}
+                                onChange={handleChange}
+                                className="form-radio h-4 w-4 text-blue-600"
+                            />
+                            <div className="ml-3">
+                                <p className="font-medium">Thanh toán online</p>
+                                <p className="text-sm text-gray-600">Thanh toán qua cổng VNPay</p>
+                            </div>
+                        </label>
+
+                        <label className="border rounded-lg p-4 flex items-center cursor-pointer hover:border-blue-500 transition-colors">
+                            <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="cash"
+                                checked={formData.paymentMethod === 'cash'}
+                                onChange={handleChange}
+                                className="form-radio h-4 w-4 text-blue-600"
+                            />
+                            <div className="ml-3">
+                                <p className="font-medium">Thanh toán tiền mặt</p>
+                                <p className="text-sm text-gray-600">Thanh toán tại trung tâm tiêm chủng</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <div className="mt-6">
                     <label className="inline-flex items-center">
                         <input
@@ -123,7 +159,7 @@ const UserInfoForm = ({
                         type="submit"
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                     >
-                        Thanh toán
+                        {formData.paymentMethod === 'cash' ? 'Đặt lịch' : 'Thanh toán'}
                     </button>
                 </div>
             </form>

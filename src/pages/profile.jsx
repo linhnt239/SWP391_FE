@@ -41,7 +41,8 @@ const Profile = () => {
                     throw new Error('Không tìm thấy userID hoặc token trong localStorage');
                 }
 
-                const response = await fetch(
+                // Fetch user profile
+                const profileResponse = await fetch(
                     `/api/user/profile?userId=${userId}`,
                     {
                         method: 'GET',
@@ -52,18 +53,31 @@ const Profile = () => {
                     }
                 );
 
-       
+                const profileData = await profileResponse.json();
 
-                const data = await response.json();
+                // Fetch completed appointments
+                const appointmentsResponse = await fetch(
+                    `/api/appointments/${userId}/completed`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                const appointmentsData = await appointmentsResponse.json();
+                console.log('Completed appointments:', appointmentsData);
 
                 setFormData({
-                    username: data.username || '',
-                    phone: data.phone || '',
-                    email: data.email || '',
-                    dateOfBirth: data.dateOfBirth || '',
-                    address: data.address || '',
-                    appointments: data.appointments || [],
-                    payments: data.payments || [],
+                    username: profileData.username || '',
+                    phone: profileData.phone || '',
+                    email: profileData.email || '',
+                    dateOfBirth: profileData.dateOfBirth || '',
+                    address: profileData.address || '',
+                    appointments: appointmentsData || [],
+                    payments: profileData.payments || [],
                 });
             } catch (err) {
                 setError(err.message);
@@ -108,8 +122,8 @@ const Profile = () => {
                 }
             );
 
-   
-            
+
+
 
             setIsEditing({
                 username: false,
@@ -140,7 +154,7 @@ const Profile = () => {
         }
     };
 
-  
+
 
     return (
         <DefaultLayout>
@@ -257,24 +271,62 @@ const Profile = () => {
                                     <div>
                                         <h3 className="text-2xl font-bold text-gray-800 mb-6">Lịch sử đặt dịch vụ</h3>
                                         <div className="space-y-4">
-                                            {formData.appointments.length > 0 ? (
-                                                formData.appointments.map((app) => (
-                                                    <div key={app.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                                        <div className="flex justify-between items-center">
-                                                            <div>
-                                                                <h4 className="font-semibold text-lg">{app.vaccine}</h4>
-                                                                <p className="text-gray-600">{app.date}</p>
+                                            {loading ? (
+                                                <div className="flex justify-center py-4">
+                                                    <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                </div>
+                                            ) : formData.appointments.length > 0 ? (
+                                                formData.appointments.map((appointment) => (
+                                                    <div key={appointment.appointmentId} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                                        <div className="flex flex-col md:flex-row justify-between">
+                                                            <div className="mb-3 md:mb-0">
+                                                                <h4 className="font-semibold text-lg">{appointment.childrenName}</h4>
+                                                                <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-gray-600">
+                                                                    <p>
+                                                                        <span className="font-medium">Ngày tiêm:</span>{' '}
+                                                                        {new Date(appointment.appointmentDate).toLocaleDateString('vi-VN')}
+                                                                    </p>
+                                                                    <p>
+                                                                        <span className="font-medium">Giờ tiêm:</span>{' '}
+                                                                        {appointment.timeStart ?
+                                                                            (typeof appointment.timeStart === 'string' ?
+                                                                                appointment.timeStart :
+                                                                                `${String(appointment.timeStart.hour).padStart(2, '0')}:${String(appointment.timeStart.minute).padStart(2, '0')}`) :
+                                                                            'Chưa có thông tin'}
+                                                                    </p>
+                                                                    <p>
+                                                                        <span className="font-medium">Vaccine:</span>{' '}
+                                                                        {appointment.vaccineDetailsList && appointment.vaccineDetailsList.length > 0
+                                                                            ? appointment.vaccineDetailsList[0].doseName
+                                                                            : "Không có thông tin"}
+                                                                    </p>
+                                                                    <p>
+                                                                        <span className="font-medium">Mũi thứ:</span>{' '}
+                                                                        {appointment.vaccineDetailsList && appointment.vaccineDetailsList.length > 0
+                                                                            ? `${appointment.vaccineDetailsList[0].currentDose}/${appointment.vaccineDetailsList[0].doseRequire}`
+                                                                            : "N/A"}
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                            <span
-                                                                className={`px-4 py-1 rounded-full ${app.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
-                                                            >
-                                                                {app.status === 'completed' ? 'Hoàn thành' : 'Đang chờ'}
-                                                            </span>
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="bg-green-100 text-green-800 px-4 py-1 rounded-full text-sm font-medium mb-2">
+                                                                    Hoàn thành
+                                                                </span>
+
+                                                                <p className="text-blue-600 font-medium mt-2">
+                                                                    {appointment.vaccineDetailsList && appointment.vaccineDetailsList.length > 0
+                                                                        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(appointment.vaccineDetailsList[0].price)
+                                                                        : "0 VND"}
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))
                                             ) : (
-                                                <p className="text-gray-600">Không có lịch sử đặt dịch vụ.</p>
+                                                <p className="text-gray-600">Không có lịch sử đặt dịch vụ hoàn thành.</p>
                                             )}
                                         </div>
                                     </div>
@@ -315,8 +367,8 @@ const Profile = () => {
                     </div>
                 </div>
             </div>
-     
-         
+
+
         </DefaultLayout>
     );
 };
