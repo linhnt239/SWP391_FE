@@ -24,6 +24,7 @@ export const useSchedule = () => {
         preferredTime: '',
         note: '',
         useExistingProfile: true,
+        paymentMethod: 'online',
     });
 
     // Lấy thông tin người dùng từ localStorage
@@ -235,9 +236,14 @@ export const useSchedule = () => {
             return;
         }
 
-        // Chuyển sang bước thanh toán
-        setStep(2);
-        toast.success('Thông tin đã được xác nhận. Vui lòng tiến hành thanh toán.');
+        // Xử lý dựa trên phương thức thanh toán
+        if (formData.paymentMethod === 'cash') {
+            handleCashCheckout();
+        } else {
+            // Chuyển sang bước thanh toán online (như cũ)
+            setStep(2);
+            toast.success('Thông tin đã được xác nhận. Vui lòng tiến hành thanh toán.');
+        }
     };
 
     const handleCheckout = async () => {
@@ -296,6 +302,74 @@ export const useSchedule = () => {
             console.error('Error during checkout:', error);
             toast.update(toastId, {
                 render: `Đã xảy ra lỗi khi thanh toán: ${error.message}`,
+                type: 'error',
+                isLoading: false,
+                autoClose: 5000
+            });
+        }
+    };
+
+    // Sửa lại hàm handleCashCheckout để chuyển thẳng đến trang success
+    const handleCashCheckout = async () => {
+        const toastId = toast.loading('Đang xử lý đặt lịch...');
+
+        try {
+            // Sử dụng định dạng dữ liệu giống hệt như trong handleCheckout (VnPay)
+            const checkoutData = {
+                childrenName: selectedChild ? selectedChild.childrenName : formData.childName,
+                childrenGender: selectedChild ? selectedChild.gender : formData.gender,
+                dateOfBirth: selectedChild ? selectedChild.dateOfBirth : formData.dateOfBirth,
+                medicalIssue: "None",
+                appointmentDate: formData.preferredDate,
+                timeStart: formData.preferredTime, // Gửi chuỗi thời gian như "13:30" giống VnPay
+                note: formData.note || ""
+            };
+
+            console.log('Cash checkout data (using same format as VnPay):', checkoutData);
+
+            // Lưu thông tin lịch hẹn vào localStorage
+            localStorage.setItem('lastAppointment', JSON.stringify({
+                childName: checkoutData.childrenName,
+                appointmentDate: formData.preferredDate,
+                appointmentTime: formData.preferredTime,
+                paymentMethod: 'cash'
+            }));
+
+            // Gọi API thanh toán tiền mặt
+            const response = await fetch(`/api/cart/checkout/cash/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(checkoutData)
+            });
+
+            // Xử lý response
+            if (!response.ok) {
+                const status = response.status;
+                throw new Error(`HTTP error ${status}`);
+            }
+
+            // Xóa giỏ hàng
+            localStorage.removeItem('cart');
+            setCartItems([]);
+
+            toast.update(toastId, {
+                render: 'Đặt lịch thành công!',
+                type: 'success',
+                isLoading: false,
+                autoClose: 2000
+            });
+
+            // Chuyển hướng người dùng TRỰC TIẾP đến trang success, không qua bước 2
+            setTimeout(() => {
+                window.location.href = `/booking-success?method=cash&date=${formData.preferredDate}&time=${formData.preferredTime}`;
+            }, 1500);
+        } catch (error) {
+            console.error('Error during cash checkout:', error);
+            toast.update(toastId, {
+                render: `Đã xảy ra lỗi khi đặt lịch: ${error.message}`,
                 type: 'error',
                 isLoading: false,
                 autoClose: 5000
@@ -363,6 +437,7 @@ export const useSchedule = () => {
         handleChange,
         handleCheckout,
         handleSubmit,
-        fetchChildren
+        fetchChildren,
+        handleCashCheckout
     };
 }; 

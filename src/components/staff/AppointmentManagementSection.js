@@ -131,6 +131,7 @@ const AppointmentManagementSection = () => {
 
     const getStatusText = (status) => {
         switch (status) {
+            case 'Not Paid': return 'Chưa Thanh Toán';
             case 'Pending': return 'Chờ xác nhận';
             case 'Verified Coming': return 'Đã xác nhận';
             case 'Cancelled': return 'Đã hủy';

@@ -301,6 +301,8 @@ export const useAppointments = () => {
     // Lấy trạng thái văn bản từ mã trạng thái
     const getStatusText = (status) => {
         switch (status) {
+            case 'Not Paid':
+                return 'Chưa Thanh Toán';
             case 'Verified Coming':
                 return 'Đã xác nhận';
             case 'Cancelled':

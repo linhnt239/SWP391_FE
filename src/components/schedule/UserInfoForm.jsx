@@ -84,7 +84,6 @@ const UserInfoForm = ({
                     </div>
                 )}
 
-
                 {/* Thông tin người đăng ký */}
                 <ParentInfoForm
                     formData={formData}
@@ -101,7 +100,7 @@ const UserInfoForm = ({
                 <div className="mt-6">
                     <h3 className="font-medium text-gray-800 mb-3">Phương thức thanh toán</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label className="border rounded-lg p-4 flex items-center cursor-pointer hover:border-blue-500 transition-colors">
+                        <label className={`border rounded-lg p-4 flex items-center cursor-pointer hover:border-blue-500 transition-colors ${formData.paymentMethod === 'online' ? 'border-blue-500 bg-blue-50' : ''}`}>
                             <input
                                 type="radio"
                                 name="paymentMethod"
@@ -116,7 +115,7 @@ const UserInfoForm = ({
                             </div>
                         </label>
 
-                        <label className="border rounded-lg p-4 flex items-center cursor-pointer hover:border-blue-500 transition-colors">
+                        <label className={`border rounded-lg p-4 flex items-center cursor-pointer hover:border-blue-500 transition-colors ${formData.paymentMethod === 'cash' ? 'border-blue-500 bg-blue-50' : ''}`}>
                             <input
                                 type="radio"
                                 name="paymentMethod"
