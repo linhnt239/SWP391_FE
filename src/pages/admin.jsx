@@ -2,6 +2,26 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
+// Đăng ký các components của Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Admin = () => {
     const [activeSection, setActiveSection] = useState("manageUsers");
@@ -12,17 +32,16 @@ const Admin = () => {
     const [showConfirm, setShowConfirm] = useState(null); // ID của user cần xác nhận xóa
     const router = useRouter();
 
-    // Dữ liệu giả lập cho doanh thu (revenue) - giữ nguyên
-    const [revenueData, setRevenueData] = useState([
-        { id: 1, service: "Tiêm vaccine trẻ em", amount: 5000000, date: "2025-03-01" },
-        { id: 2, service: "Tiêm vaccine người lớn", amount: 3000000, date: "2025-03-02" },
-        { id: 3, service: "Tiêm vaccine trẻ em", amount: 2000000, date: "2025-03-05" },
-        { id: 4, service: "Tư vấn sức khỏe", amount: 1000000, date: "2025-03-07" },
-    ]);
+    // Thay thế state revenueData cũ
+    const [revenueData, setRevenueData] = useState([]);
+    const [revenueLoading, setRevenueLoading] = useState(true);
 
     // Bộ lọc ngày - giữ nguyên
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+
+    // Thêm state cho filter
+    const [filterType, setFilterType] = useState('all'); // 'all', 'week', 'month', 'custom'
 
     // Lấy danh sách người dùng từ API
     useEffect(() => {
@@ -71,6 +90,45 @@ const Admin = () => {
         };
 
         fetchUsers();
+    }, []);
+
+    // Thêm useEffect để fetch dữ liệu doanh thu
+    useEffect(() => {
+        const fetchRevenue = async () => {
+            setRevenueLoading(true);
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    throw new Error("Token không tồn tại. Vui lòng đăng nhập lại!");
+                }
+
+                const response = await fetch("/api/payments/revenue/daily", {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                        accept: "*/*",
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error("Không thể lấy dữ liệu doanh thu");
+                }
+
+                const data = await response.json();
+                setRevenueData(data);
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu doanh thu:", error);
+                toast.error("Không thể lấy dữ liệu doanh thu!", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+            } finally {
+                setRevenueLoading(false);
+            }
+        };
+
+        fetchRevenue();
     }, []);
 
     // Xử lý logout - giữ nguyên
@@ -129,9 +187,9 @@ const Admin = () => {
         }
     };
 
-    // Lọc doanh thu theo ngày - giữ nguyên
+    // Cập nhật hàm lọc doanh thu
     const filteredRevenue = revenueData.filter((item) => {
-        const itemDate = new Date(item.date);
+        const itemDate = new Date(item.day);
         const start = startDate ? new Date(startDate) : null;
         const end = endDate ? new Date(endDate) : null;
 
@@ -145,14 +203,110 @@ const Admin = () => {
         return true;
     });
 
-    // Tính tổng doanh thu - giữ nguyên
-    const totalRevenue = filteredRevenue.reduce((sum, item) => sum + item.amount, 0);
+    // Cập nhật cách tính tổng doanh thu
+    const totalRevenue = filteredRevenue.reduce((sum, item) => sum + item.totalRevenue, 0);
 
     // Tính doanh thu theo dịch vụ - giữ nguyên
     const revenueByService = filteredRevenue.reduce((acc, item) => {
         acc[item.service] = (acc[item.service] || 0) + item.amount;
         return acc;
     }, {});
+
+    // Sửa lại cấu hình biểu đồ
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Doanh thu theo ngày',
+            },
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Doanh thu (VNĐ)'
+                }
+            },
+            y1: {
+                beginAtZero: true,
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Số lượng giao dịch'
+                },
+                grid: {
+                    drawOnChartArea: false,
+                }
+            }
+        }
+    };
+
+    // Sửa lại dữ liệu biểu đồ
+    const chartData = {
+        labels: filteredRevenue.map(item => new Date(item.day).toLocaleDateString('vi-VN')),
+        datasets: [
+            {
+                label: 'Doanh thu',
+                data: filteredRevenue.map(item => item.totalRevenue),
+                backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                borderColor: 'rgb(53, 162, 235)',
+                borderWidth: 1,
+                yAxisID: 'y',
+            },
+            {
+                label: 'Số lượng giao dịch',
+                data: filteredRevenue.map(item => item.paymentCount),
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgb(75, 192, 192)',
+                borderWidth: 1,
+                yAxisID: 'y1'
+            }
+        ]
+    };
+
+    // Thêm hàm helper để lấy ngày đầu và cuối của tuần/tháng hiện tại
+    const getDateRange = (type) => {
+        const today = new Date();
+        const firstDay = new Date(today);
+        const lastDay = new Date(today);
+
+        switch (type) {
+            case 'week':
+                firstDay.setDate(today.getDate() - today.getDay()); // Chủ nhật của tuần này
+                lastDay.setDate(firstDay.getDate() + 6); // Thứ 7 của tuần này
+                break;
+            case 'month':
+                firstDay.setDate(1); // Ngày đầu tháng
+                lastDay.setMonth(today.getMonth() + 1, 0); // Ngày cuối tháng
+                break;
+            default:
+                return { start: '', end: '' };
+        }
+
+        return {
+            start: firstDay.toISOString().split('T')[0],
+            end: lastDay.toISOString().split('T')[0]
+        };
+    };
+
+    // Thêm hàm xử lý thay đổi filter
+    const handleFilterChange = (type) => {
+        setFilterType(type);
+        if (type === 'all') {
+            setStartDate('');
+            setEndDate('');
+        } else if (type !== 'custom') {
+            const { start, end } = getDateRange(type);
+            setStartDate(start);
+            setEndDate(end);
+        }
+    };
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -334,68 +488,164 @@ const Admin = () => {
 
                 {activeSection === "manageRevenue" && (
                     <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-2xl font-semibold text-blue-900 mb-4">Manage Revenue</h2>
+                        <h2 className="text-2xl font-semibold text-blue-900 mb-4">Quản lý doanh thu</h2>
                         <div className="mb-6">
                             <h3 className="text-xl font-semibold text-gray-700 mb-2">
                                 Tổng doanh thu: {totalRevenue.toLocaleString()} VNĐ
                             </h3>
-                            <div className="flex space-x-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Từ ngày</label>
-                                    <input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                    />
+                            
+                            {/* Thêm phần filter buttons */}
+                            <div className="flex space-x-2 mb-4">
+                                <button
+                                    onClick={() => handleFilterChange('all')}
+                                    className={`px-4 py-2 rounded-md ${
+                                        filterType === 'all'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    Tất cả
+                                </button>
+                                <button
+                                    onClick={() => handleFilterChange('week')}
+                                    className={`px-4 py-2 rounded-md ${
+                                        filterType === 'week'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    Tuần này
+                                </button>
+                                <button
+                                    onClick={() => handleFilterChange('month')}
+                                    className={`px-4 py-2 rounded-md ${
+                                        filterType === 'month'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    Tháng này
+                                </button>
+                                <button
+                                    onClick={() => handleFilterChange('custom')}
+                                    className={`px-4 py-2 rounded-md ${
+                                        filterType === 'custom'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    Tùy chỉnh
+                                </button>
+                            </div>
+
+                            {/* Chỉ hiển thị date inputs khi ở chế độ tùy chỉnh */}
+                            {filterType === 'custom' && (
+                                <div className="flex space-x-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Từ ngày</label>
+                                        <input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Đến ngày</label>
+                                        <input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Đến ngày</label>
-                                    <input
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            )}
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">Doanh thu theo ngày</h3>
+                        {revenueLoading ? (
+                            <div className="flex justify-center items-center py-4">
+                                <svg
+                                    className="animate-spin h-8 w-8 text-blue-600 mr-3"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
                                     />
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    />
+                                </svg>
+                                <span className="text-gray-500">Đang tải...</span>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-3 gap-4 text-center font-semibold bg-gray-200 p-2 rounded-t-md">
+                                    <span>Ngày</span>
+                                    <span>Số lượng giao dịch</span>
+                                    <span>Doanh thu (VNĐ)</span>
                                 </div>
+                                <ul className="space-y-2">
+                                    {filteredRevenue.map((item, index) => (
+                                        <li
+                                            key={index}
+                                            className="grid grid-cols-3 gap-4 items-center text-center py-2 border-b border-gray-200"
+                                        >
+                                            <span>{new Date(item.day).toLocaleDateString('vi-VN')}</span>
+                                            <span>{item.paymentCount}</span>
+                                            <span>{item.totalRevenue.toLocaleString()}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {/* Thêm phần biểu đồ */}
+                        <div className="mb-8 mt-4">
+                            <h3 className="text-xl font-semibold text-gray-700 mb-4">Biểu đồ doanh thu</h3>
+                            <div className="h-[400px]">
+                                {!revenueLoading && filteredRevenue.length > 0 ? (
+                                    <Bar options={chartOptions} data={chartData} />
+                                ) : revenueLoading ? (
+                                    <div className="flex justify-center items-center h-full">
+                                        <svg
+                                            className="animate-spin h-8 w-8 text-blue-600 mr-3"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            />
+                                        </svg>
+                                        <span className="text-gray-500">Đang tải biểu đồ...</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-center items-center h-full">
+                                        <span className="text-gray-500">Không có dữ liệu để hiển thị</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">Doanh thu chi tiết</h3>
-                        <div className="grid grid-cols-4 gap-4 text-center font-semibold bg-gray-200 p-2 rounded-t-md">
-                            <span>ID</span>
-                            <span>Dịch vụ</span>
-                            <span>Số tiền (VNĐ)</span>
-                            <span>Ngày</span>
-                        </div>
-                        <ul className="space-y-2">
-                            {filteredRevenue.map((item) => (
-                                <li
-                                    key={item.id}
-                                    className="grid grid-cols-4 gap-4 items-center text-center py-2 border-b border-gray-200"
-                                >
-                                    <span>{item.id}</span>
-                                    <span>{item.service}</span>
-                                    <span>{item.amount.toLocaleString()}</span>
-                                    <span>{item.date}</span>
-                                </li>
-                            ))}
-                        </ul>
-                        <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-2">Doanh thu theo dịch vụ</h3>
-                        <div className="grid grid-cols-2 gap-4 text-center font-semibold bg-gray-200 p-2 rounded-t-md">
-                            <span>Dịch vụ</span>
-                            <span>Tổng tiền (VNĐ)</span>
-                        </div>
-                        <ul className="space-y-2">
-                            {Object.entries(revenueByService).map(([service, amount], index) => (
-                                <li
-                                    key={index}
-                                    className="grid grid-cols-2 gap-4 items-center text-center py-2 border-b border-gray-200"
-                                >
-                                    <span>{service}</span>
-                                    <span>{amount.toLocaleString()}</span>
-                                </li>
-                            ))}
-                        </ul>
                     </div>
                 )}
             </div>
