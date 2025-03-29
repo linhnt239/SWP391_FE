@@ -6,7 +6,7 @@ export function middleware(request) {
     const { pathname } = request.nextUrl;
 
     // Danh sách các public routes không cần đăng nhập
-    const publicRoutes = ['/login', '/register', '/', '/about', '/services'];
+    const publicRoutes = ['/login', '/register', '/', '/about', '/services', '/news'];
 
     // Cho phép truy cập các public routes và tài nguyên tĩnh
     if (publicRoutes.includes(pathname) ||

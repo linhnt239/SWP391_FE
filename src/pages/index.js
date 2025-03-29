@@ -1,11 +1,46 @@
 // src/pages/index.js
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSyringe, faBook, faMoneyBillWave, faHospital, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import DefaultLayout from "@/components/layout/DefaultLayout";
 
 const Home = () => {
+  // Thêm state để lưu trữ dữ liệu vaccine
+  const [vaccines, setVaccines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Hàm lấy dữ liệu vaccine từ API
+  useEffect(() => {
+    const fetchVaccines = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('/api/vaccines-all', {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setVaccines(data);
+      } catch (error) {
+        console.error('Error fetching vaccines:', error);
+        setError('Không thể tải thông tin vaccine');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVaccines();
+  }, []);
   return (
     <DefaultLayout>
       {/* Hero Section */}
@@ -93,21 +128,35 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b">
-                  <td className="py-3 px-4">Vaccine phòng lao (BCG)</td>
-                  <td className="py-3 px-4">Trẻ từ 0-1 tuổi</td>
-                  <td className="py-3 px-4">150,000</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3 px-4">Vaccine 5 trong 1 (Pentaxim)</td>
-                  <td className="py-3 px-4">Trẻ từ 2-24 tháng</td>
-                  <td className="py-3 px-4">700,000</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3 px-4">Vaccine sởi - quai bị - rubella (MMR)</td>
-                  <td className="py-3 px-4">Trẻ từ 9 tháng</td>
-                  <td className="py-3 px-4">300,000</td>
-                </tr>
+                {loading ? (
+                  <tr>
+                    <td colSpan="3" className="py-4 px-4 text-center">Đang tải dữ liệu...</td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="3" className="py-4 px-4 text-center text-red-500">{error}</td>
+                  </tr>
+                ) : vaccines.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" className="py-4 px-4 text-center">Không có dữ liệu vaccine</td>
+                  </tr>
+                ) : (
+                  vaccines.map((vaccine, index) => (
+                    vaccine.vaccineDetailsList && vaccine.vaccineDetailsList.length > 0 && (
+                      <tr key={vaccine.vaccineId} className="border-b">
+                        <td className="py-3 px-4">{vaccine.illnessName}</td>
+                        <td className="py-3 px-4">
+                          {vaccine.ageLimit === 0
+                            ? "Mọi lứa tuổi"
+                            : `Trẻ từ ${vaccine.ageLimit} tháng tuổi`}
+                        </td>
+                        <td className="py-3 px-4">
+                          {vaccine.vaccineDetailsList[0].price.toLocaleString()} VNĐ
+                        </td>
+                      </tr>
+                    )
+                  ))
+                )}
                 <tr className="border-b">
                   <td className="py-3 px-4">Tư vấn chuyên gia (trực tuyến)</td>
                   <td className="py-3 px-4">Phụ huynh</td>
@@ -134,18 +183,12 @@ const Home = () => {
               <p className="text-gray-700">
                 Hướng dẫn chi tiết lịch tiêm chủng theo độ tuổi, từ sơ sinh đến 12 tuổi, giúp phụ huynh dễ dàng theo dõi và đảm bảo con được tiêm đầy đủ các mũi vaccine cần thiết.
               </p>
-              <Link href="/guide/schedule">
-                <span className="text-blue-600 hover:underline mt-4 inline-block">Xem chi tiết</span>
-              </Link>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-xl font-semibold text-blue-900 mb-4">Chăm sóc sau tiêm chủng</h3>
               <p className="text-gray-700">
                 Hướng dẫn cách chăm sóc trẻ sau khi tiêm vaccine, xử lý các phản ứng phụ thường gặp như sốt, sưng đỏ, và cách nhận biết các dấu hiệu cần gặp bác sĩ.
               </p>
-              <Link href="/guide/post-vaccination-care">
-                <span className="text-blue-600 hover:underline mt-4 inline-block">Xem chi tiết</span>
-              </Link>
             </div>
           </div>
         </div>

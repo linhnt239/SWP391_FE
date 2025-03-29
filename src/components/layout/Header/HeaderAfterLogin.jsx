@@ -80,7 +80,7 @@ const HeaderAfterLogin = () => {
 
     return (
         <header className="bg-blue-900 text-white py-2">
-            <div className="container mx-auto px-4">
+            <div className="mx-auto px-4">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-4">
                         <span>📞 0898520760</span>

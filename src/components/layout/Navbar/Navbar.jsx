@@ -28,6 +28,11 @@ const Navbar = () => {
                         </Link>
                     </li>
                     <li>
+                        <Link href="/news" className="text-blue-900 hover:text-blue-600">
+                            Tin tức
+                        </Link>
+                    </li>
+                    <li>
                         <Link href="/services" className="text-blue-900 hover:text-blue-600">
                             Dịch vụ
                         </Link>
