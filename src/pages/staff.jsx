@@ -6,10 +6,11 @@ import Sidebar from "../components/staff/Sidebar";
 import OverviewSection from "../components/staff/OverviewSection";
 import VaccineManagementSection from "../components/staff/VaccineManagementSection";
 import FeedbackSection from "../components/staff/FeedbackSection";
-import SystemManagementSection from "../components/staff/SystemManagementSection";
+
 import VaccineDetailModal from "../components/staff/VaccineDetailModal";
 import { useRouter } from "next/router";
 import AppointmentManagementSection from "@/components/staff/AppointmentManagementSection";
+import PaymentManagementSection from "@/components/staff/PaymentManagementSection";
 
 const Staff = () => {
   const [activeSection, setActiveSection] = useState("overview");
@@ -489,8 +490,8 @@ const Staff = () => {
             handleSaveResponse={handleSaveResponse}
           />
         )}
-        {activeSection === "system" && (
-          <SystemManagementSection
+        {activeSection === "payment" && (
+          <PaymentManagementSection
             showAddServiceForm={showAddServiceForm}
             setShowAddServiceForm={setShowAddServiceForm}
             newService={newService}

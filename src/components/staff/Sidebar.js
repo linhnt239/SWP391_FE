@@ -76,14 +76,14 @@ const Sidebar = ({ activeSection, setActiveSection }) => {
                             Feedback
                         </button>
                     </li>
-                    {/* <li>
+                    <li>
                         <button
-                            onClick={() => setActiveSection('system')}
-                            className={`w-full text-left px-4 py-2 rounded ${activeSection === 'system' ? 'bg-teal-500' : 'hover:bg-gray-700'}`}
+                            onClick={() => setActiveSection('payment')}
+                            className={`w-full text-left px-4 py-2 rounded ${activeSection === 'payment' ? 'bg-teal-500' : 'hover:bg-gray-700'}`}
                         >
-                            System Management
+                            Payment Management
                         </button>
-                    </li> */}
+                    </li>
                 </ul>
             </nav>
         </div>

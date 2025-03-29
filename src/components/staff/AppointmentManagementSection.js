@@ -52,7 +52,7 @@ const AppointmentManagementSection = () => {
     const verifyAppointment = async (appointmentId) => {
         setActionLoading((prev) => ({ ...prev, [appointmentId]: true }));
         try {
-            const response = await fetch(`/api/appointments/${appointmentId}/verify`, {
+            const response = await fetch(`/api/appointmentsDetail/${appointmentId}/verify`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -91,7 +91,7 @@ const AppointmentManagementSection = () => {
         const toastId = toast.loading('Đang cập nhật trạng thái...');
 
         try {
-            const response = await fetch(`/api/appointments/${appointmentId}/mark-successful`, {
+            const response = await fetch(`/api/appointmentsDetail/${appointmentId}/mark-successful`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
