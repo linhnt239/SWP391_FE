@@ -84,6 +84,14 @@ const Sidebar = ({ activeSection, setActiveSection }) => {
                             Payment Management
                         </button>
                     </li>
+                    <li>
+                        <button
+                            onClick={() => setActiveSection('news')}
+                            className={`w-full text-left px-4 py-2 rounded ${activeSection === 'new' ? 'bg-teal-500' : 'hover:bg-gray-700'}`}
+                        >
+                            News
+                        </button>
+                    </li>
                 </ul>
             </nav>
         </div>

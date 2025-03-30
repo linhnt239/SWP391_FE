@@ -11,6 +11,7 @@ import VaccineDetailModal from "../components/staff/VaccineDetailModal";
 import { useRouter } from "next/router";
 import AppointmentManagementSection from "@/components/staff/AppointmentManagementSection";
 import PaymentManagementSection from "@/components/staff/PaymentManagementSection";
+import News from "../components/staff/News";
 
 const Staff = () => {
   const [activeSection, setActiveSection] = useState("overview");
@@ -507,6 +508,7 @@ const Staff = () => {
           />
         )}
         {activeSection === "appointment" && <AppointmentManagementSection />}
+        {activeSection === "news" && <News />}
       </div>
       <VaccineDetailModal
         showVaccineDetailModal={showVaccineDetailModal}
