@@ -11,6 +11,7 @@ export function middleware(request) {
     // Cho phép truy cập các public routes và tài nguyên tĩnh
     if (publicRoutes.includes(pathname) ||
         pathname.startsWith('/_next') ||
+        pathname.startsWith('/news/') ||  // Cho phép tất cả các đường dẫn bắt đầu bằng /news/
         pathname.includes('/images/') ||
         pathname.endsWith('.jpeg') ||
         pathname.endsWith('.jpg') ||

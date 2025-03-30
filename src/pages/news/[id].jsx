@@ -19,8 +19,8 @@ const NewsDetail = () => {
             try {
                 setLoading(true);
 
-                // Cập nhật endpoint để phù hợp với API backend
-                const response = await fetch(`/api/news-getById/${id}`, {
+                // Thay đổi endpoint và sử dụng query parameter ?id=
+                const response = await fetch(`/api/news/getById?id=${id}`, {
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': '*/*'

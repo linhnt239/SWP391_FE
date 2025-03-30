@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { BiCheckCircle, BiCalendar, BiTimeFive, BiChild, BiArrowBack } from 'react-icons/bi';
@@ -7,7 +7,13 @@ import DefaultLayout from '@/components/layout/DefaultLayout';
 const BookingSuccess = () => {
     const router = useRouter();
     const { method, date, time } = router.query;
-    const lastAppointment = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('lastAppointment') || '{}') : {};
+    const [appointmentInfo, setAppointmentInfo] = useState({
+        childName: '',
+        appointmentDate: '',
+        appointmentTime: '',
+        paymentMethod: ''
+    });
+    const [isLoaded, setIsLoaded] = useState(false);
 
     // Format date to DD/MM/YYYY
     const formatDate = (dateString) => {
@@ -25,23 +31,69 @@ const BookingSuccess = () => {
     };
 
     useEffect(() => {
-        // Nếu không có thông tin và router đã sẵn sàng, chuyển hướng về trang chủ
-        if (router.isReady && !method && !date && !time && Object.keys(lastAppointment).length === 0) {
-            router.push('/');
-        }
-    }, [router.isReady, method, date, time, lastAppointment]);
+        // Chỉ chạy ở phía client
+        if (typeof window !== 'undefined') {
+            const lastAppointment = JSON.parse(localStorage.getItem('lastAppointment') || '{}');
 
-    // Lấy thông tin từ query params hoặc localStorage
-    const appointmentDate = date || lastAppointment.appointmentDate;
-    const appointmentTime = time || lastAppointment.appointmentTime;
-    const childName = lastAppointment.childName;
-    const paymentMethod = method || lastAppointment.paymentMethod;
+            setAppointmentInfo({
+                childName: lastAppointment.childName || '',
+                appointmentDate: date || lastAppointment.appointmentDate || '',
+                appointmentTime: time || lastAppointment.appointmentTime || '',
+                paymentMethod: method || lastAppointment.paymentMethod || 'cash'
+            });
+
+            setIsLoaded(true);
+
+            // Nếu không có thông tin và router đã sẵn sàng, chuyển hướng về trang chủ
+            if (router.isReady &&
+                !method && !date && !time &&
+                Object.keys(lastAppointment).length === 0) {
+                router.push('/');
+            }
+        }
+    }, [router.isReady, method, date, time]);
+
+    // Chỉ hiển thị UI khi dữ liệu đã được load từ client
+    if (!isLoaded) {
+        return (
+            <DefaultLayout>
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+            </DefaultLayout>
+        );
+    }
 
     return (
         <DefaultLayout>
             <div className="min-h-screen bg-gray-50 py-12">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                <div className="mx-auto px-4">
+                    <div className="bg-white rounded-xl shadow-xl overflow-hidden w-full max-w-full">
+                        <div className="text-center mb-8">
+                            <h1 className="text-3xl font-bold text-blue-900 mb-6">Đăng ký mũi tiêm</h1>
+                            <div className="flex justify-center items-center mb-6">
+                                <div className="flex flex-col items-center text-gray-500">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-300">
+                                        1
+                                    </div>
+                                    <span className="text-sm font-medium">Thông tin người được tiêm</span>
+                                </div>
+                                <div className="w-16 h-1 mx-2 bg-gray-300"></div>
+                                <div className="flex flex-col items-center text-gray-500">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-300">
+                                        2
+                                    </div>
+                                    <span className="text-sm font-medium">Thanh toán</span>
+                                </div>
+                                <div className="w-16 h-1 mx-2 bg-blue-600"></div>
+                                <div className="flex flex-col items-center text-blue-600">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-blue-600 text-white">
+                                        3
+                                    </div>
+                                    <span className="text-sm font-medium">Xác nhận đặt lịch thành công</span>
+                                </div>
+                            </div>
+                        </div>
                         {/* Header với gradient */}
                         <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-8 text-white text-center">
                             <div className="bg-white bg-opacity-20 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
@@ -55,7 +107,7 @@ const BookingSuccess = () => {
                         <div className="p-8">
                             <div className="mb-8">
                                 <p className="text-gray-700 mb-4 text-lg">
-                                    {paymentMethod === 'cash'
+                                    {appointmentInfo.paymentMethod === 'cash'
                                         ? 'Bạn đã đặt lịch tiêm chủng thành công. Vui lòng đến trung tâm đúng hẹn và thanh toán trực tiếp tại quầy.'
                                         : 'Bạn đã đặt lịch và thanh toán tiêm chủng thành công. Vui lòng đến trung tâm đúng hẹn.'
                                     }
@@ -70,12 +122,12 @@ const BookingSuccess = () => {
                                 <h2 className="text-xl font-semibold text-blue-800 mb-4 border-b border-blue-200 pb-2">Chi tiết lịch hẹn</h2>
 
                                 <div className="space-y-4">
-                                    {childName && (
+                                    {appointmentInfo.childName && (
                                         <div className="flex items-center">
                                             <BiChild className="text-blue-600 text-xl mr-3" />
                                             <div>
                                                 <p className="text-sm text-gray-500">Họ tên trẻ</p>
-                                                <p className="font-medium">{childName}</p>
+                                                <p className="font-medium">{appointmentInfo.childName}</p>
                                             </div>
                                         </div>
                                     )}
@@ -84,7 +136,7 @@ const BookingSuccess = () => {
                                         <BiCalendar className="text-blue-600 text-xl mr-3" />
                                         <div>
                                             <p className="text-sm text-gray-500">Ngày tiêm</p>
-                                            <p className="font-medium">{formatDate(appointmentDate)}</p>
+                                            <p className="font-medium">{formatDate(appointmentInfo.appointmentDate)}</p>
                                         </div>
                                     </div>
 
@@ -92,7 +144,7 @@ const BookingSuccess = () => {
                                         <BiTimeFive className="text-blue-600 text-xl mr-3" />
                                         <div>
                                             <p className="text-sm text-gray-500">Giờ tiêm</p>
-                                            <p className="font-medium">{appointmentTime}</p>
+                                            <p className="font-medium">{appointmentInfo.appointmentTime}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -102,7 +154,7 @@ const BookingSuccess = () => {
                             <div className="bg-amber-50 border-l-4 border-amber-400 p-5 mb-8">
                                 <h3 className="font-semibold text-amber-800 mb-2">Lưu ý quan trọng</h3>
                                 <p className="text-amber-700">
-                                    {paymentMethod === 'cash'
+                                    {appointmentInfo.paymentMethod === 'cash'
                                         ? 'Vui lòng đến trước 15 phút để hoàn tất thủ tục thanh toán trước khi tiêm.'
                                         : 'Vui lòng đến trước 15 phút để hoàn tất thủ tục trước khi tiêm.'
                                     }

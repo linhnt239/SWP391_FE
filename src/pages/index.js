@@ -195,21 +195,6 @@ const Home = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-12 bg-blue-700 text-white text-center">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold mb-4">
-            <FontAwesomeIcon icon={faCalendarAlt} className="mr-2" /> Đặt lịch tiêm chủng ngay hôm nay!
-          </h2>
-          <p className="text-lg mb-6">
-            Đảm bảo sức khỏe cho con bạn với hệ thống quản lý tiêm chủng thông minh.
-          </p>
-          <Link href="/schedule">
-            <button className="bg-white text-blue-900 px-6 py-3 rounded-full hover:bg-gray-200">
-              Đặt lịch ngay
-            </button>
-          </Link>
-        </div>
-      </section>
     </DefaultLayout>
   );
 };
