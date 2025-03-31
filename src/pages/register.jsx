@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router'; // Sử dụng useRouter từ Next.js
 import Image from 'next/image'; // Sử dụng Image từ Next.js để tối ưu hình ảnh
+import { toast } from 'react-toastify'; // Import toast từ react-toastify
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -13,7 +14,6 @@ const Register = () => {
         dateOfBirth: '',
     });
 
-    const [message, setMessage] = useState('');
     const [errors, setErrors] = useState({});
     const router = useRouter(); // Khởi tạo useRouter
 
@@ -33,7 +33,18 @@ const Register = () => {
 
         // Kiểm tra các trường bắt buộc
         if (!formData.username) newErrors.username = 'Tên người dùng là bắt buộc';
-        if (!formData.email) newErrors.email = 'Email không được để trống';
+
+        // Validate email
+        if (!formData.email) {
+            newErrors.email = 'Email không được để trống';
+        } else {
+            // Kiểm tra định dạng email hợp lệ (phải có ký tự @)
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                newErrors.email = 'Email không hợp lệ';
+            }
+        }
+
         if (!formData.password) newErrors.password = 'Mật khẩu không được để trống';
         if (!formData.confirmPassword) {
             newErrors.confirmPassword = 'Xác nhận mật khẩu là bắt buộc';
@@ -62,7 +73,6 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage(''); // Xóa thông báo trước khi gửi yêu cầu
 
         if (!validateForm()) {
             return;
@@ -83,8 +93,19 @@ const Register = () => {
             }
 
             const data = await response.json();
-            setMessage('Đăng ký thành công!');
+
+            // Sử dụng toast để hiển thị thông báo thành công
+            toast.success('Đăng ký thành công! Chuyển hướng đến trang đăng nhập...', {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+
             console.log('Đăng ký thành công:', data);
+
             // Xóa form sau khi đăng ký thành công
             setFormData({
                 username: '',
@@ -95,12 +116,21 @@ const Register = () => {
                 phone: '',
                 dateOfBirth: '',
             });
+
             // Điều hướng về trang đăng nhập sau 2 giây
             setTimeout(() => {
                 router.push('/login');
             }, 2000);
         } catch (error) {
-            setMessage('Đăng ký không thành công, vui lòng kiểm tra lại thông tin.');
+            // Sử dụng toast để hiển thị thông báo lỗi
+            toast.error('Đăng ký không thành công: ' + error.message, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
             console.error('Lỗi khi đăng ký:', error.message);
         }
     };
@@ -155,7 +185,7 @@ const Register = () => {
                             <div>
                                 <label className="block text-gray-700 text-sm font-semibold mb-2">Email</label>
                                 <input
-                                    type="text"
+                                    type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
@@ -258,7 +288,6 @@ const Register = () => {
                         >
                             Quay lại đăng nhập
                         </button>
-                        {message && <div className="text-red-500 text-sm text-center mt-4">{message}</div>}
                     </div>
                 </div>
             </div>

@@ -6,12 +6,15 @@ export function middleware(request) {
     const { pathname } = request.nextUrl;
 
     // Danh sách các public routes không cần đăng nhập
-    const publicRoutes = ['/login', '/register', '/', '/about', '/services', '/news'];
+    const publicRoutes = ['/login', '/register', '/', '/about', '/services', '/news', '/forgot-password', '/reset-password', '/verify-otp'];
 
     // Cho phép truy cập các public routes và tài nguyên tĩnh
     if (publicRoutes.includes(pathname) ||
         pathname.startsWith('/_next') ||
-        pathname.startsWith('/news/') ||  // Cho phép tất cả các đường dẫn bắt đầu bằng /news/
+        pathname.startsWith('/news/') ||
+        pathname.startsWith('/verify-otp/') ||
+        pathname.startsWith('/reset-password/') ||
+        pathname.startsWith('/services/') ||
         pathname.includes('/images/') ||
         pathname.endsWith('.jpeg') ||
         pathname.endsWith('.jpg') ||
