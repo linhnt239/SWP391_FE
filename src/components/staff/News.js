@@ -111,7 +111,7 @@ const News = () => {
       description: news.description,
       source: news.source,
       category: news.category,
-      img: news.img || ''
+      img: news.img || '',
     });
     setShowEditModal(true);
   };
@@ -136,7 +136,7 @@ const News = () => {
           description: editingNews.description,
           source: editingNews.source,
           category: editingNews.category,
-          img: editingNews.img
+          img: editingNews.img,
         }),
       });
 
@@ -145,9 +145,7 @@ const News = () => {
       }
 
       const updatedNews = await response.json();
-      setNews(news.map(item => 
-        item.newsId === editingNews.newsId ? updatedNews : item
-      ));
+      setNews(news.map((item) => (item.newsId === editingNews.newsId ? updatedNews : item)));
       setShowEditModal(false);
       setEditingNews(null);
       toast.success('Cập nhật tin tức thành công!');
@@ -184,7 +182,7 @@ const News = () => {
         throw new Error('Không thể xóa tin tức');
       }
 
-      setNews(news.filter(item => item.newsId !== deletingNewsId));
+      setNews(news.filter((item) => item.newsId !== deletingNewsId));
       setShowDeleteModal(false);
       setDeletingNewsId(null);
       toast.success('Xóa tin tức thành công!');
@@ -197,12 +195,26 @@ const News = () => {
   };
 
   const AddNewsModal = () => {
+    const [formData, setFormData] = useState({
+      title: '',
+      description: '',
+      img: '',
+      source: '',
+      category: ''
+    });
+
     const handleInputChange = (e) => {
       const { name, value } = e.target;
-      setNewNews(prev => ({
+      setFormData(prev => ({
         ...prev,
         [name]: value
       }));
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setNewNews(formData);
+      await handleCreateNews(e);
     };
 
     return (
@@ -221,38 +233,29 @@ const News = () => {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <form onSubmit={handleCreateNews} className="grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tiêu đề
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề</label>
               <input
                 type="text"
                 name="title"
-                defaultValue={newNews.title}
-                onInput={handleInputChange}
+                value={formData.title}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mô tả
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
               <textarea
                 name="description"
-                defaultValue={newNews.description}
-                onInput={handleInputChange}
+                value={formData.description}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 rows="4"
                 required
@@ -260,41 +263,35 @@ const News = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL Hình ảnh
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">URL Hình ảnh</label>
               <input
                 type="url"
                 name="img"
-                defaultValue={newNews.img}
-                onInput={handleInputChange}
+                value={formData.img}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nguồn
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nguồn</label>
               <input
                 type="text"
                 name="source"
-                defaultValue={newNews.source}
-                onInput={handleInputChange}
+                value={formData.source}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Danh mục
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
               <input
                 type="text"
                 name="category"
-                defaultValue={newNews.category}
-                onInput={handleInputChange}
+                value={formData.category}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
               />
@@ -315,9 +312,25 @@ const News = () => {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Đang tạo...
                   </>
@@ -333,40 +346,66 @@ const News = () => {
   };
 
   const EditNewsModal = () => {
+    const [formData, setFormData] = useState({
+      title: editingNews?.title || '',
+      description: editingNews?.description || '',
+      img: editingNews?.img || '',
+      source: editingNews?.source || '',
+      category: editingNews?.category || ''
+    });
+
+    useEffect(() => {
+      if (editingNews) {
+        setFormData({
+          title: editingNews.title || '',
+          description: editingNews.description || '',
+          img: editingNews.img || '',
+          source: editingNews.source || '',
+          category: editingNews.category || ''
+        });
+      }
+    }, [editingNews]);
+
     const handleEditInputChange = (e) => {
       const { name, value } = e.target;
-      setEditingNews(prev => ({
+      setFormData(prev => ({
         ...prev,
         [name]: value
       }));
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setEditingNews(prev => ({
+        ...prev,
+        ...formData
+      }));
+      await handleUpdateNews(e);
     };
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-8 w-full max-w-2xl">
           <h2 className="text-2xl font-bold mb-6">Sửa tin tức</h2>
-          <form onSubmit={handleUpdateNews}>
+          <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tiêu đề
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề</label>
                 <input
                   type="text"
                   name="title"
-                  defaultValue={editingNews.title}
-                  onInput={handleEditInputChange}
+                  value={formData.title}
+                  onChange={handleEditInputChange}
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mô tả
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
                 <textarea
-                  value={editingNews.description}
+                  name="description"
+                  value={formData.description}
                   onChange={handleEditInputChange}
                   className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                   rows="4"
@@ -375,24 +414,22 @@ const News = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL Hình ảnh
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL Hình ảnh</label>
                 <input
                   type="url"
-                  value={editingNews.img}
+                  name="img"
+                  value={formData.img}
                   onChange={handleEditInputChange}
                   className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nguồn
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nguồn</label>
                 <input
                   type="text"
-                  value={editingNews.source}
+                  name="source"
+                  value={formData.source}
                   onChange={handleEditInputChange}
                   className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                   required
@@ -400,12 +437,11 @@ const News = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Danh mục
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
                 <input
                   type="text"
-                  value={editingNews.category}
+                  name="category"
+                  value={formData.category}
                   onChange={handleEditInputChange}
                   className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                   required
@@ -484,22 +520,22 @@ const News = () => {
           onClick={() => setShowAddModal(true)}
           className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-5 w-5 mr-2" 
-            viewBox="0 0 20 20" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            viewBox="0 0 20 20"
             fill="currentColor"
           >
-            <path 
-              fillRule="evenodd" 
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" 
-              clipRule="evenodd" 
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clipRule="evenodd"
             />
           </svg>
           Thêm tin tức mới
         </button>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {news.map((item) => (
           <div
@@ -507,47 +543,33 @@ const News = () => {
             className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
           >
             {item.img ? (
-              <img
-                src={item.img}
-                alt={item.title}
-                className="w-full h-48 object-cover"
-              />
+              <img src={item.img} alt={item.title} className="w-full h-48 object-cover" />
             ) : (
               <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
                 <span className="text-gray-400">Không có hình ảnh</span>
               </div>
             )}
-            
+
             <div className="p-6">
               <div className="flex justify-between items-start mb-2">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
-                  {item.category}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {formatDate(item.createdAt)}
-                </span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">{item.category}</span>
+                <span className="text-sm text-gray-500">{formatDate(item.createdAt)}</span>
               </div>
-              
-              <h2 className="text-xl font-semibold mb-2 text-gray-800">
-                {item.title}
-              </h2>
-              
-              <p className="text-gray-600 mb-4 line-clamp-3">
-                {item.description}
-              </p>
-              
+
+              <h2 className="text-xl font-semibold mb-2 text-gray-800">{item.title}</h2>
+
+              <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
+
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">
-                  Nguồn: {item.source}
-                </span>
+                <span className="text-sm text-gray-500">Nguồn: {item.source}</span>
                 <div className="space-x-2">
-                  <button 
+                  <button
                     onClick={() => handleEditNews(item)}
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                   >
                     Sửa
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleShowDeleteModal(item.newsId)}
                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                   >
@@ -559,15 +581,13 @@ const News = () => {
           </div>
         ))}
       </div>
-      
+
       {showAddModal && <AddNewsModal />}
       {showEditModal && <EditNewsModal />}
       {showDeleteModal && <DeleteConfirmModal />}
-      
+
       {news.length === 0 && (
-        <div className="text-center text-gray-500 mt-8">
-          Chưa có tin tức nào được đăng.
-        </div>
+        <div className="text-center text-gray-500 mt-8">Chưa có tin tức nào được đăng.</div>
       )}
     </div>
   );
