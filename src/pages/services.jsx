@@ -95,9 +95,7 @@ const Services = () => {
                                         <h3 className="text-xl font-bold text-gray-800 mb-2">{vaccine.name}</h3>
                                         <p className="text-gray-600 mb-4 line-clamp-2">{vaccine.description}</p>
                                         <div className="flex justify-between items-center mb-4">
-                                            <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                                                {vaccine.ageGroup}
-                                            </div>
+                                            
                                             <div className="text-lg font-bold text-blue-600">
                                                 {formatPrice(vaccine.price)}
                                             </div>

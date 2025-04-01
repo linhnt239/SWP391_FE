@@ -224,13 +224,7 @@ const Profile = () => {
                                         <BiHistory className="text-xl" />
                                         <span>Lịch sử đặt dịch vụ</span>
                                     </button>
-                                    <button
-                                        onClick={() => setActiveTab('payments')}
-                                        className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'payments' ? 'bg-blue-800' : 'hover:bg-blue-800'}`}
-                                    >
-                                        <BiWallet className="text-xl" />
-                                        <span>Lịch sử thanh toán</span>
-                                    </button>
+                                   
                                 </nav>
                             </div>
                             <div className="md:w-3/4 p-8">

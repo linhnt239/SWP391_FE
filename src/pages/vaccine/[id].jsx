@@ -321,10 +321,7 @@ const VaccineDetail = () => {
                                             <span className="font-medium text-gray-700">Thời gian giữa các mũi:</span>
                                             <span>{vaccine.dateBetweenDoses} ngày</span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">Đối tượng:</span>
-                                            <span>{vaccine.ageGroup}</span>
-                                        </div>
+                                       
                                         <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Nhà sản xuất:</span>
                                             <span>{vaccine.manufacturer}</span>
