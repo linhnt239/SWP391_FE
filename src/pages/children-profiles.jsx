@@ -213,30 +213,39 @@ const ChildrenProfiles = () => {
 
     const handleDelete = async (childrenId) => {
         if (!token) {
-            alert('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
+            toast.error('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
             return;
         }
 
         if (window.confirm('Bạn có chắc chắn muốn xóa hồ sơ này không?')) {
             try {
-                const response = await fetch(`/api/child-delete/${childrenId}`, {
-                    method: 'DELETE',
-                    headers: createHeaders()
-                });
+                toast.promise(
+                    fetch(`/api/child-delete/${childrenId}`, {
+                        method: 'DELETE',
+                        headers: createHeaders()
+                    }).then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(`API error: ${response.status} ${response.statusText} - ${text}`);
+                            });
+                        }
+                        return response;
+                    }),
+                    {
+                        pending: 'Đang xóa hồ sơ trẻ...',
+                        success: 'Xóa hồ sơ trẻ thành công',
+                        error: {
+                            render({ data }) {
+                                return `Không thể xóa hồ sơ trẻ: ${data.message}`;
+                            }
+                        }
+                    }
+                );
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
-                }
-
-                // Hiển thị thông báo thành công
-                alert('Xóa hồ sơ trẻ thành công');
-
-                // Tải lại danh sách trẻ sau khi xóa
+                // Tải lại danh sách trẻ sau khi xóa thành công
                 fetchChildren();
             } catch (error) {
                 console.error('Error deleting child profile:', error);
-                alert(`Không thể xóa hồ sơ trẻ: ${error.message}`);
             }
         }
     };

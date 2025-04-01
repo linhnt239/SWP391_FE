@@ -45,7 +45,7 @@ const EditTimeModal = ({
                             onChange={(e) => onTimeChange({ ...editedTime, hour: parseInt(e.target.value) })}
                             className="p-2 border border-gray-300 rounded-md flex-1"
                         >
-                            {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                            {Array.from({ length: 10 }, (_, i) => i + 8).map((hour) => (
                                 <option key={hour} value={hour}>
                                     {hour.toString().padStart(2, '0')}
                                 </option>
@@ -65,6 +65,7 @@ const EditTimeModal = ({
                         </select>
                     </div>
                     <p className="mt-2 text-sm text-gray-500">Giờ hẹn hiện tại: {appointment.timeStart}</p>
+                    <p className="mt-1 text-sm text-blue-600">Lưu ý: Giờ hẹn chỉ có thể từ 8:00 đến 17:00</p>
                 </div>
 
                 <div className="flex justify-end gap-4 mt-6">
