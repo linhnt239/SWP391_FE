@@ -41,17 +41,22 @@ const Profile = () => {
                     throw new Error('Không tìm thấy userID hoặc token trong localStorage');
                 }
 
-                // Fetch user profile
+                // Fetch user profile theo đúng API endpoint
                 const profileResponse = await fetch(
-                    `/api/user/profile?userId=${userId}`,
+                    `/api/user/profile?userId=${userId}`, // Sửa lại endpoint
                     {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json',
+                            'Accept': '*/*'
                         },
                     }
                 );
+
+                if (!profileResponse.ok) {
+                    throw new Error(`API error: ${profileResponse.status}`);
+                }
 
                 const profileData = await profileResponse.json();
 
@@ -71,32 +76,22 @@ const Profile = () => {
                 console.log('Completed appointments:', appointmentsData);
 
                 // Fetch payment history
-                const paymentsResponse = await fetch(
-                    `/api/payments/user/${userId}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
+                
 
-                const paymentsData = await paymentsResponse.json();
-                console.log('Payment history:', paymentsData);
 
-                setFormData({
+                setFormData(prev => ({
+                    ...prev,
                     username: profileData.username || '',
                     phone: profileData.phone || '',
                     email: profileData.email || '',
                     dateOfBirth: profileData.dateOfBirth || '',
                     address: profileData.address || '',
                     appointments: appointmentsData || [],
-                    payments: paymentsData || [],
-                });
+                }));
             } catch (err) {
                 setError(err.message);
                 console.error('Lỗi khi lấy dữ liệu:', err);
+                toast.error('Không thể tải thông tin người dùng. Vui lòng thử lại sau.');
             } finally {
                 setLoading(false);
             }
