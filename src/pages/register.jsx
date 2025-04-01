@@ -45,7 +45,17 @@ const Register = () => {
             }
         }
 
-        if (!formData.password) newErrors.password = 'Mật khẩu không được để trống';
+        // Validate mật khẩu
+        if (!formData.password) {
+            newErrors.password = 'Mật khẩu không được để trống';
+        } else {
+            // Kiểm tra độ dài mật khẩu (6-12 ký tự) và phải có ít nhất một chữ viết hoa
+            const passwordRegex = /^(?=.*[A-Z]).{6,12}$/;
+            if (!passwordRegex.test(formData.password)) {
+                newErrors.password = 'Mật khẩu phải có độ dài 6-12 ký tự và ít nhất một chữ viết hoa';
+            }
+        }
+
         if (!formData.confirmPassword) {
             newErrors.confirmPassword = 'Xác nhận mật khẩu là bắt buộc';
         } else if (formData.password !== formData.confirmPassword) {
@@ -205,7 +215,7 @@ const Register = () => {
                                     value={formData.password}
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 rounded-lg border focus:border-blue-500 focus:outline-none transition-colors"
-                                    placeholder="Nhập mật khẩu của bạn"
+                                    placeholder="Nhập mật khẩu của bạn (6-12 ký tự, ít nhất 1 chữ hoa)"
                                     required
                                 />
                                 {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}

@@ -53,13 +53,29 @@ const AppointmentDetailModal = ({
                             </svg>
                         </button>
                     </div>
-
+                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                        <h3 className="font-semibold text-indigo-700 mb-3">Thông tin trẻ</h3>
+                        <div className="flex justify-between mb-2">
+                            <span className="text-gray-600">Họ tên:</span>
+                            <span className="font-semibold">{appointment.childrenName}</span>
+                        </div>
+                        {appointment.dateOfBirth && (
+                            <div className="flex justify-between mb-2">
+                                <span className="text-gray-600">Ngày sinh:</span>
+                                <span className="font-semibold">{formatDate(appointment.dateOfBirth)}</span>
+                            </div>
+                        )}
+                        {appointment.childrenGender && (
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Giới tính:</span>
+                                <span className="font-semibold">
+                                    {appointment.childrenGender === "MALE" ? "Nam" : "Nữ"}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                     <div className="space-y-4">
                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <div className="flex justify-between mb-2">
-                                <span className="text-gray-600">Mã lịch hẹn:</span>
-                                <span className="font-semibold">{appointment.appointmentId}</span>
-                            </div>
                             <div className="flex justify-between mb-2">
                                 <span className="text-gray-600">Trạng thái:</span>
                                 <span className={`font-semibold ${getStatusClass(appointment.status)}`}>
@@ -76,27 +92,7 @@ const AppointmentDetailModal = ({
                             </div>
                         </div>
 
-                        <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                            <h3 className="font-semibold text-indigo-700 mb-3">Thông tin trẻ</h3>
-                            <div className="flex justify-between mb-2">
-                                <span className="text-gray-600">Họ tên:</span>
-                                <span className="font-semibold">{appointment.childrenName}</span>
-                            </div>
-                            {appointment.dateOfBirth && (
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-gray-600">Ngày sinh:</span>
-                                    <span className="font-semibold">{formatDate(appointment.dateOfBirth)}</span>
-                                </div>
-                            )}
-                            {appointment.childrenGender && (
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Giới tính:</span>
-                                    <span className="font-semibold">
-                                        {appointment.childrenGender === "MALE" ? "Nam" : "Nữ"}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
+
 
                         <div className="bg-green-50 p-4 rounded-lg border border-green-100">
                             <h3 className="font-semibold text-green-700 mb-3">Danh sách vắc-xin</h3>

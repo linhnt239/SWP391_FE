@@ -70,6 +70,21 @@ const Profile = () => {
                 const appointmentsData = await appointmentsResponse.json();
                 console.log('Completed appointments:', appointmentsData);
 
+                // Fetch payment history
+                const paymentsResponse = await fetch(
+                    `/api/payments/user/${userId}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                const paymentsData = await paymentsResponse.json();
+                console.log('Payment history:', paymentsData);
+
                 setFormData({
                     username: profileData.username || '',
                     phone: profileData.phone || '',
@@ -77,7 +92,7 @@ const Profile = () => {
                     dateOfBirth: profileData.dateOfBirth || '',
                     address: profileData.address || '',
                     appointments: appointmentsData || [],
-                    payments: profileData.payments || [],
+                    payments: paymentsData || [],
                 });
             } catch (err) {
                 setError(err.message);
@@ -154,7 +169,24 @@ const Profile = () => {
         }
     };
 
+    // Format date to Vietnamese format
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
 
+    // Format price to Vietnamese currency
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(price);
+    };
 
     return (
         <DefaultLayout>

@@ -16,7 +16,7 @@ const Footer = () => {
                         <h2 className="text-lg font-bold mb-4">Về chúng tôi</h2>
                         <div className="flex items-center mb-3">
                             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-2">
-                                <img src="/images/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+                                <img src="/vaccine-icon.jpeg" alt="Logo" className="w-8 h-8 object-contain" />
                             </div>
                             <div className="font-bold">Vaccine Schedule</div>
                         </div>
@@ -93,7 +93,7 @@ const Footer = () => {
                         <ul className="space-y-3 text-sm">
                             <li className="flex items-start">
                                 <FontAwesomeIcon icon={faMapMarkerAlt} className="mt-1 mr-2 text-blue-400 h-4 w-4" />
-                                <span className="text-gray-300">Số 1 Võ Văn Ngân, Phường Linh Chiểu, Thành phố Thủ Đức</span>
+                                <span className="text-gray-300">123 Nguyễn Trãi, P.Tân Phú, Q.3, TP.HCM</span>
                             </li>
                             <li className="flex items-center">
                                 <FontAwesomeIcon icon={faPhone} className="mr-2 text-blue-400 h-4 w-4" />

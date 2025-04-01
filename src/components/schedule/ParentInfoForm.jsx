@@ -1,6 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const ParentInfoForm = ({ formData, handleChange }) => {
+    const [phoneError, setPhoneError] = useState('');
+
+    const validatePhone = (e) => {
+        const value = e.target.value;
+        const phoneRegex = /^0\d{9}$/;
+
+        if (!phoneRegex.test(value) && value.length > 0) {
+            setPhoneError('Số điện thoại không đúng định dạng');
+        } else {
+            setPhoneError('');
+        }
+
+        handleChange(e);
+    };
+
     return (
         <div className="border-t border-gray-200 pt-6 mt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Thông tin người đăng ký</h3>
@@ -31,11 +46,13 @@ const ParentInfoForm = ({ formData, handleChange }) => {
                         id="parentPhone"
                         name="parentPhone"
                         value={formData.parentPhone}
-                        onChange={handleChange}
+                        onChange={validatePhone}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        pattern="^0\d{9}$"
+                        className={`w-full px-4 py-2 border ${phoneError ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-blue-500 focus:border-blue-500`}
                         placeholder="Nhập số điện thoại"
                     />
+                    {phoneError && <p className="mt-1 text-sm text-red-500">{phoneError}</p>}
                 </div>
             </div>
         </div>
