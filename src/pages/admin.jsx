@@ -43,6 +43,10 @@ const Admin = () => {
     // Thêm state cho filter
     const [filterType, setFilterType] = useState('all'); // 'all', 'week', 'month', 'custom'
 
+    // Thêm state cho phân trang
+    const [currentPage, setCurrentPage] = useState(1);
+    const [usersPerPage] = useState(10);
+
     // Lấy danh sách người dùng từ API
     useEffect(() => {
         const fetchUsers = async () => {
@@ -308,6 +312,67 @@ const Admin = () => {
         }
     };
 
+    // Tính toán users cho trang hiện tại
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+
+    // Tính tổng số trang
+    const totalPages = Math.ceil(users.length / usersPerPage);
+
+    // Hàm thay đổi trang
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Component phân trang
+    const Pagination = () => {
+        const pageNumbers = [];
+        for (let i = 1; i <= totalPages; i++) {
+            pageNumbers.push(i);
+        }
+
+        return (
+            <div className="flex justify-center mt-4 space-x-2">
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1 rounded ${
+                        currentPage === 1
+                            ? 'bg-gray-300 cursor-not-allowed'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                >
+                    Trước
+                </button>
+                {pageNumbers.map(number => (
+                    <button
+                        key={number}
+                        onClick={() => handlePageChange(number)}
+                        className={`px-3 py-1 rounded ${
+                            currentPage === number
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                    >
+                        {number}
+                    </button>
+                ))}
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1 rounded ${
+                        currentPage === totalPages
+                            ? 'bg-gray-300 cursor-not-allowed'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                >
+                    Sau
+                </button>
+            </div>
+        );
+    };
+
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar - giữ nguyên */}
@@ -404,8 +469,8 @@ const Admin = () => {
                                     </svg>
                                     <span className="text-gray-500">Đang tải...</span>
                                 </li>
-                            ) : users.length > 0 ? (
-                                users.map((user) => (
+                            ) : currentUsers.length > 0 ? (
+                                currentUsers.map((user) => (
                                     <li
                                         key={user.id}
                                         className="grid grid-cols-6 gap-4 items-center text-center py-2 border-b border-gray-200"
@@ -459,6 +524,8 @@ const Admin = () => {
                                 </li>
                             )}
                         </ul>
+                        {/* Thêm component phân trang */}
+                        {!loading && users.length > 0 && <Pagination />}
                     </div>
                 )}
 
@@ -525,16 +592,6 @@ const Admin = () => {
                                     }`}
                                 >
                                     Tháng này
-                                </button>
-                                <button
-                                    onClick={() => handleFilterChange('custom')}
-                                    className={`px-4 py-2 rounded-md ${
-                                        filterType === 'custom'
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    Tùy chỉnh
                                 </button>
                             </div>
 
