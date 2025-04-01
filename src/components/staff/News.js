@@ -17,6 +17,8 @@ const News = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingNewsId, setDeletingNewsId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedNews, setSelectedNews] = useState(null);
 
   useEffect(() => {
     fetchNews();
@@ -63,8 +65,7 @@ const News = () => {
     });
   };
 
-  const handleCreateNews = async (e) => {
-    e.preventDefault();
+  const handleCreateNews = async (formData) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -72,13 +73,24 @@ const News = () => {
         throw new Error('Token không tồn tại. Vui lòng đăng nhập lại!');
       }
 
+      // Đảm bảo dữ liệu đúng format trước khi gửi
+      const newsData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        source: formData.source.trim(),
+        category: formData.category.trim(),
+        img: formData.img?.trim() || "" // Nếu img không có thì gửi string rỗng
+      };
+
+      console.log('Sending data to server:', newsData); // Log để debug
+
       const response = await fetch('/api/news-create', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newNews),
+        body: JSON.stringify(newsData),
       });
 
       if (!response.ok) {
@@ -86,19 +98,14 @@ const News = () => {
       }
 
       const data = await response.json();
+      console.log('Response from server:', data); // Log để debug
+      
       setNews([data, ...news]);
       setShowAddModal(false);
-      setNewNews({
-        img: '',
-        title: '',
-        description: '',
-        source: '',
-        category: '',
-      });
       toast.success('Tạo tin tức thành công!');
     } catch (error) {
       console.error('Lỗi khi tạo tin tức:', error);
-      toast.error('Không thể tạo tin tức. Vui lòng thử lại!');
+      toast.error(error.message || 'Không thể tạo tin tức. Vui lòng thử lại!');
     } finally {
       setLoading(false);
     }
@@ -116,8 +123,7 @@ const News = () => {
     setShowEditModal(true);
   };
 
-  const handleUpdateNews = async (e) => {
-    e.preventDefault();
+  const handleUpdateNews = async (formData) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -125,19 +131,24 @@ const News = () => {
         throw new Error('Token không tồn tại. Vui lòng đăng nhập lại!');
       }
 
+      // Đảm bảo dữ liệu đúng format trước khi gửi
+      const newsData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        source: formData.source.trim(),
+        category: formData.category.trim(),
+        img: formData.img?.trim() || ""
+      };
+
+      console.log('Sending update data:', newsData); // Log để debug
+
       const response = await fetch(`/api/news-update/${editingNews.newsId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: editingNews.title,
-          description: editingNews.description,
-          source: editingNews.source,
-          category: editingNews.category,
-          img: editingNews.img,
-        }),
+        body: JSON.stringify(newsData),
       });
 
       if (!response.ok) {
@@ -145,13 +156,15 @@ const News = () => {
       }
 
       const updatedNews = await response.json();
+      console.log('Response from server:', updatedNews); // Log để debug
+
       setNews(news.map((item) => (item.newsId === editingNews.newsId ? updatedNews : item)));
       setShowEditModal(false);
       setEditingNews(null);
       toast.success('Cập nhật tin tức thành công!');
     } catch (error) {
       console.error('Lỗi khi cập nhật tin tức:', error);
-      toast.error('Không thể cập nhật tin tức. Vui lòng thử lại!');
+      toast.error(error.message || 'Không thể cập nhật tin tức. Vui lòng thử lại!');
     } finally {
       setLoading(false);
     }
@@ -168,7 +181,7 @@ const News = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Token không tồn tại. Vui lòng đăng nhập lại!');
-      }
+      } 
 
       const response = await fetch(`/api/news-delete/${deletingNewsId}`, {
         method: 'DELETE',
@@ -194,6 +207,11 @@ const News = () => {
     }
   };
 
+  const handleShowDetail = (news) => {
+    setSelectedNews(news);
+    setShowDetailModal(true);
+  };
+
   const AddNewsModal = () => {
     const [formData, setFormData] = useState({
       title: '',
@@ -213,8 +231,14 @@ const News = () => {
 
     const handleSubmit = async (e) => {
       e.preventDefault();
-      setNewNews(formData);
-      await handleCreateNews(e);
+      
+      // Kiểm tra dữ liệu trước khi gửi
+      if (!formData.title || !formData.description || !formData.source || !formData.category) {
+        toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+        return;
+      }
+
+      await handleCreateNews(formData); // Gọi hàm handleCreateNews với formData
     };
 
     return (
@@ -307,36 +331,9 @@ const News = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex items-center"
               >
-                {loading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Đang tạo...
-                  </>
-                ) : (
-                  'Tạo tin tức'
-                )}
+                Tạo tin tức
               </button>
             </div>
           </form>
@@ -376,11 +373,14 @@ const News = () => {
 
     const handleSubmit = async (e) => {
       e.preventDefault();
-      setEditingNews(prev => ({
-        ...prev,
-        ...formData
-      }));
-      await handleUpdateNews(e);
+      
+      // Kiểm tra dữ liệu trước khi gửi
+      if (!formData.title || !formData.description || !formData.source || !formData.category) {
+        toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+        return;
+      }
+
+      await handleUpdateNews(formData);
     };
 
     return (
@@ -504,6 +504,67 @@ const News = () => {
     </div>
   );
 
+  const NewsDetailModal = () => {
+    if (!selectedNews) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">{selectedNews.title}</h2>
+            <button
+              onClick={() => setShowDetailModal(false)}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {selectedNews.img && (
+            <div className="mb-6">
+              <img
+                src={selectedNews.img}
+                alt={selectedNews.title}
+                className="w-full h-auto rounded-lg object-cover max-h-[400px]"
+              />
+            </div>
+          )}
+
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                {selectedNews.category}
+              </span>
+              <span className="text-sm text-gray-500">
+                Đăng ngày: {formatDate(selectedNews.createdAt)}
+              </span>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Nguồn:</h3>
+              <p className="text-gray-600">{selectedNews.source}</p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Mô tả:</h3>
+              <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
+                {selectedNews.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -552,13 +613,23 @@ const News = () => {
 
             <div className="p-6">
               <div className="flex justify-between items-start mb-2">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">{item.category}</span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
+                  {item.category}
+                </span>
                 <span className="text-sm text-gray-500">{formatDate(item.createdAt)}</span>
               </div>
 
               <h2 className="text-xl font-semibold mb-2 text-gray-800">{item.title}</h2>
 
-              <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
+              <div className="relative">
+                <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
+                <button
+                  onClick={() => handleShowDetail(item)}
+                  className="text-blue-500 hover:text-blue-600 text-sm font-medium"
+                >
+                  Xem thêm
+                </button>
+              </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Nguồn: {item.source}</span>
@@ -585,6 +656,7 @@ const News = () => {
       {showAddModal && <AddNewsModal />}
       {showEditModal && <EditNewsModal />}
       {showDeleteModal && <DeleteConfirmModal />}
+      {showDetailModal && <NewsDetailModal />}
 
       {news.length === 0 && (
         <div className="text-center text-gray-500 mt-8">Chưa có tin tức nào được đăng.</div>
