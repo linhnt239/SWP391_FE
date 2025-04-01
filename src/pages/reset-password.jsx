@@ -31,8 +31,10 @@ const ResetPassword = () => {
         // Validate mật khẩu mới
         if (!formData.newPassword) {
             newErrors.newPassword = 'Mật khẩu mới không được để trống';
-        } else if (formData.newPassword.length < 6) {
-            newErrors.newPassword = 'Mật khẩu phải có ít nhất 6 ký tự';
+        } else if (formData.newPassword.length < 6 || formData.newPassword.length > 12) {
+            newErrors.newPassword = 'Mật khẩu phải có độ dài từ 6 đến 12 ký tự';
+        } else if (!/[A-Z]/.test(formData.newPassword)) {
+            newErrors.newPassword = 'Mật khẩu phải chứa ít nhất một chữ viết hoa';
         }
 
         // Validate xác nhận mật khẩu
@@ -146,11 +148,11 @@ const ResetPassword = () => {
                         <ul className="text-sm text-blue-100 space-y-3 text-left">
                             <li className="flex items-start">
                                 <span className="mr-2">•</span>
-                                <span>Sử dụng ít nhất 6 ký tự</span>
+                                <span>Sử dụng từ 6 đến 12 ký tự</span>
                             </li>
                             <li className="flex items-start">
                                 <span className="mr-2">•</span>
-                                <span>Kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt</span>
+                                <span>Phải có ít nhất một chữ viết hoa</span>
                             </li>
                             <li className="flex items-start">
                                 <span className="mr-2">•</span>
@@ -280,8 +282,8 @@ const ResetPassword = () => {
                         <div className="bg-blue-50 rounded-lg p-4">
                             <h3 className="text-lg font-semibold text-gray-700 mb-2">Lưu ý khi tạo mật khẩu:</h3>
                             <ul className="text-sm text-gray-600 space-y-2">
-                                <li>• Sử dụng ít nhất 6 ký tự</li>
-                                <li>• Kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt</li>
+                                <li>• Sử dụng từ 6 đến 12 ký tự</li>
+                                <li>• Phải có ít nhất một chữ viết hoa</li>
                                 <li>• Không sử dụng thông tin cá nhân dễ đoán</li>
                                 <li>• Không sử dụng lại mật khẩu từ các trang web khác</li>
                             </ul>
