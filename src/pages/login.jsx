@@ -175,15 +175,6 @@ const LoginForm = () => {
                             {formError.password && <div className="text-red-500 text-sm mt-1">{formError.password}</div>}
                         </div>
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={rememberMe}
-                                    onChange={handleRememberMeChange}
-                                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                />
-                                <label className="ml-2 text-sm text-gray-600">Ghi nhớ đăng nhập</label>
-                            </div>
                             <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
                                 Quên mật khẩu?
                             </Link>
