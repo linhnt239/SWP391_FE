@@ -228,9 +228,8 @@ const VaccineManagementSection = ({
               <div className="flex items-end">
                 <button
                   onClick={handleAddVaccine}
-                  className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center ${
-                    loading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   disabled={loading}
                 >
                   {loading ? (
@@ -259,7 +258,7 @@ const VaccineManagementSection = ({
           )}
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Danh sách vaccine</h3>
           <div className="grid grid-cols-5 gap-4 text-center font-semibold bg-gray-200 p-2 rounded-t-md">
-            <span>Tên vaccine</span>
+            <span>Tên bệnh</span>
             <span>Mô tả</span>
             <span>Độ tuổi</span>
             <span>Hành động</span>
@@ -306,9 +305,8 @@ const VaccineManagementSection = ({
                     <div className="flex justify-center space-x-2">
                       <button
                         onClick={() => handleDeleteVaccine(vaccine.vaccineId)}
-                        className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${
-                          deleteLoading[vaccine.vaccineId] ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${deleteLoading[vaccine.vaccineId] ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                         disabled={deleteLoading[vaccine.vaccineId]}
                       >
                         {deleteLoading[vaccine.vaccineId] ? (
@@ -336,9 +334,8 @@ const VaccineManagementSection = ({
                     <div className="flex justify-center space-x-2">
                       <button
                         onClick={() => handleViewDetails(vaccine.vaccineId)}
-                        className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 ${
-                          fetchLoading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 ${fetchLoading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                         disabled={fetchLoading}
                       >
                         {fetchLoading ? 'Đang tải...' : 'Xem chi tiết'}
@@ -382,7 +379,7 @@ const VaccineManagementSection = ({
                 <span>URL ảnh</span>
                 <span>Nhà sản xuất</span>
                 <span>Số lượng</span>
-                <span>Tồn kho</span>
+
                 <span>Khoảng cách liều</span>
                 <span>Giá (VNĐ)</span>
                 <span>Hành động</span>
@@ -419,6 +416,7 @@ const VaccineManagementSection = ({
                           onChange={(e) => setEditedDetail({ ...editedDetail, manufacturer: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
+
                         <input
                           type="number"
                           value={editedDetail.quantity}
@@ -427,14 +425,7 @@ const VaccineManagementSection = ({
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
-                        <input
-                          type="number"
-                          value={editedDetail.stock}
-                          onChange={(e) =>
-                            setEditedDetail({ ...editedDetail, stock: parseInt(e.target.value) || 0 })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        />
+
                         <input
                           type="text"
                           value={editedDetail.dateBetweenDoses}
@@ -452,9 +443,8 @@ const VaccineManagementSection = ({
                         <div className="flex justify-center space-x-2">
                           <button
                             onClick={handleSaveEditDetail}
-                            className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center ${
-                              fetchLoading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center ${fetchLoading ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
                             disabled={fetchLoading}
                           >
                             {fetchLoading ? (
@@ -506,7 +496,6 @@ const VaccineManagementSection = ({
                         </div>
                         <span>{detail.manufacturer || 'N/A'}</span>
                         <span>{detail.quantity || 'N/A'}</span>
-                        <span>{detail.stock || 'N/A'}</span>
                         <span>{detail.dateBetweenDoses || 'N/A'}</span>
                         <span>{detail.price ? detail.price.toLocaleString() : 'N/A'}</span>
                         <div className="flex justify-center space-x-2">
@@ -518,9 +507,8 @@ const VaccineManagementSection = ({
                           </button>
                           <button
                             onClick={() => handleDeleteDetail(selectedVaccineId, detail.vaccineDetailsId)}
-                            className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${
-                              deleteDetailLoading[detail.vaccineDetailsId] ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${deleteDetailLoading[detail.vaccineDetailsId] ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
                             disabled={deleteDetailLoading[detail.vaccineDetailsId]}
                           >
                             {deleteDetailLoading[detail.vaccineDetailsId] ? (

@@ -76,8 +76,38 @@ const Profile = () => {
                 console.log('Completed appointments:', appointmentsData);
 
                 // Fetch payment history
-                
+                try {
+                    console.log('Fetching payment history for userId:', userId);
 
+                    const paymentResponse = await fetch(
+                        `/api/payments-getByUserId/${userId}`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                                'Accept': '*/*'
+                            },
+                        }
+                    );
+
+                    console.log('Payment API response status:', paymentResponse.status);
+
+                    if (!paymentResponse.ok) {
+                        console.error(`Error fetching payment history: ${paymentResponse.status}`);
+                    } else {
+                        const paymentData = await paymentResponse.json();
+                        console.log('Payment history data:', paymentData);
+
+                        // Cập nhật state với dữ liệu thanh toán
+                        setFormData(prev => ({
+                            ...prev,
+                            payments: paymentData || [],
+                        }));
+                    }
+                } catch (paymentError) {
+                    console.error('Error in payment history fetch:', paymentError);
+                }
 
                 setFormData(prev => ({
                     ...prev,
@@ -219,7 +249,13 @@ const Profile = () => {
                                         <BiHistory className="text-xl" />
                                         <span>Lịch sử đặt dịch vụ</span>
                                     </button>
-                                   
+                                    <button
+                                        onClick={() => setActiveTab('payments')}
+                                        className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'payments' ? 'bg-blue-800' : 'hover:bg-blue-800'}`}
+                                    >
+                                        <BiWallet className="text-xl" />
+                                        <span>Lịch sử thanh toán</span>
+                                    </button>
                                 </nav>
                             </div>
                             <div className="md:w-3/4 p-8">

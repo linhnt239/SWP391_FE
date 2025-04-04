@@ -6,19 +6,23 @@ import Image from 'next/image';
 
 const VaccineDetail = () => {
     const router = useRouter();
-    const { id } = router.query;
+    const { vaccineDetailsId } = router.query;
     const [vaccine, setVaccine] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [addedToCart, setAddedToCart] = useState(false);
 
     useEffect(() => {
-        if (!id) return;
+        if (!vaccineDetailsId) return;
 
         const fetchVaccineDetail = async () => {
             try {
                 setIsLoading(true);
                 const savedToken = localStorage.getItem('token');
+
+                console.log('Fetching vaccine details for ID:', vaccineDetailsId);
+
+                // Sửa URL API để sử dụng query parameter vaccineDetailsId
                 const response = await fetch(`/api/vaccinedetails-getById?vaccineDetailsId=${vaccineDetailsId}`, {
                     headers: {
                         'Content-Type': 'application/json',
@@ -91,7 +95,7 @@ const VaccineDetail = () => {
         };
 
         fetchVaccineDetail();
-    }, [id]);
+    }, [vaccineDetailsId]);
 
     // Hàm định dạng giá tiền
     const formatPrice = (price) => {
@@ -325,22 +329,13 @@ const VaccineDetail = () => {
                                 <div className="bg-blue-50 p-6 rounded-lg mb-6">
                                     <h2 className="text-xl font-bold text-blue-900 mb-4">Thông tin cơ bản</h2>
                                     <div className="space-y-4">
-                                        <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">Ngày tạo:</span>
-                                            <span>{vaccine.createdAtFormatted || 'Chưa có thông tin'}</span>
-                                        </div>
-                                        {vaccine.updateAt && (
-                                            <div className="flex justify-between">
-                                                <span className="font-medium text-gray-700">Ngày cập nhật:</span>
-                                                <span>{vaccine.updateAtFormatted}</span>
-                                            </div>
-                                        )}
+
                                         <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Giá tiêm:</span>
                                             <span className="font-bold text-blue-600">
-                                                {new Intl.NumberFormat('vi-VN', { 
-                                                    style: 'currency', 
-                                                    currency: 'VND' 
+                                                {new Intl.NumberFormat('vi-VN', {
+                                                    style: 'currency',
+                                                    currency: 'VND'
                                                 }).format(vaccine.price)}
                                             </span>
                                         </div>
@@ -348,14 +343,12 @@ const VaccineDetail = () => {
                                             <span className="font-medium text-gray-700">Số mũi cần tiêm:</span>
                                             <span>{vaccine.doseRequire} mũi</span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">Mũi tiêm hiện tại:</span>
-                                            <span>{vaccine.currentDose || 'Chưa tiêm'}</span>
-                                        </div>
+
                                         <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Thời gian giữa các mũi:</span>
                                             <span>{vaccine.dateBetweenDoses} ngày</span>
                                         </div>
+
                                         <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Nhà sản xuất:</span>
                                             <span>{vaccine.manufacturer}</span>

@@ -19,7 +19,7 @@ const ListVaccineDetail = () => {
                 setLoading(true);
                 // Lấy token từ localStorage
                 const token = localStorage.getItem('token');
-                
+
                 if (!token) {
                     throw new Error('Vui lòng đăng nhập để xem thông tin');
                 }
@@ -52,14 +52,14 @@ const ListVaccineDetail = () => {
             } catch (error) {
                 console.error('Error fetching vaccine details:', error);
                 setError(error.message);
-                
+
                 // Nếu lỗi token, chuyển hướng về trang login
                 if (error.message.includes('đăng nhập') || error.message.includes('token')) {
                     toast.error('Vui lòng đăng nhập để xem thông tin');
                     router.push('/login');
                     return;
                 }
-                
+
                 toast.error(error.message || 'Không thể tải thông tin vaccine');
             } finally {
                 setLoading(false);
@@ -69,8 +69,8 @@ const ListVaccineDetail = () => {
         fetchVaccineDetails();
     }, [vaccineId, router]);
 
-    const handleViewDetail = (vaccineId) => {
-        router.push(`/vaccine/${vaccineId}`);
+    const handleViewDetail = (vaccineDetailsId) => {
+        router.push(`/vaccineDetails/${vaccineDetailsId}`);
     };
 
     // Format price to VND
@@ -142,12 +142,11 @@ const ListVaccineDetail = () => {
                                                     {detail.doseName || 'Mũi tiêm'}
                                                 </h2>
                                                 <p className="text-gray-600">
-                                                    Mũi {detail.currentDose || '1'}/{detail.doseRequire || '1'}
+                                                    {detail.doseRequire} Mũi
                                                 </p>
                                             </div>
-                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                                detail.quantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                            }`}>
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${detail.quantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                }`}>
                                                 {detail.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}
                                             </span>
                                         </div>
@@ -172,17 +171,15 @@ const ListVaccineDetail = () => {
                                         </div>
 
                                         <div className="flex justify-between items-center">
-                                            <div className="text-sm text-gray-500">
-                                                {detail.status === 'Available' ? 'Sẵn sàng đặt lịch' : 'Tạm thời không có sẵn'}
-                                            </div>
+
                                             <button
-                                                onClick={() => handleViewDetail(detail.vaccineId)}
+                                                onClick={() => handleViewDetail(detail.vaccineDetailsId)}
                                                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                                 disabled={!detail.quantity}
                                             >
                                                 Chọn mũi này
                                                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                                                 </svg>
                                             </button>
                                         </div>

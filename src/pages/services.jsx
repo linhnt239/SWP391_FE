@@ -97,16 +97,19 @@ const Services = () => {
                                         <h3 className="text-xl font-bold text-gray-800 mb-2">{vaccine.name}</h3>
                                         <p className="text-gray-600 mb-4 line-clamp-2">{vaccine.description}</p>
                                         <div className="flex justify-between items-center mb-4">
-                                            
+                                            <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                                                {vaccine.ageGroup}
+                                            </div>
                                             <div className="text-lg font-bold text-blue-600">
                                                 {formatPrice(vaccine.price)}
                                             </div>
                                         </div>
+
                                         <div className="flex justify-between items-center">
-                                            <div className="flex items-center text-gray-500">
+                                            {/* <div className="flex items-center text-gray-500">
                                                 <FontAwesomeIcon icon={faSyringe} className="mr-2" />
                                                 <span>{vaccine.doses} mũi</span>
-                                            </div>
+                                            </div> */}
                                             <button
                                                 onClick={() => router.push(`/vaccine/listVaccineDetail?vaccineId=${vaccine.id}`)}
                                                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
