@@ -18,49 +18,66 @@ const VaccineDetail = () => {
         const fetchVaccineDetail = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch(`/api/vaccinedetails-all?vaccineId=${id}`);
+                const savedToken = localStorage.getItem('token');
+                const response = await fetch(`/api/vaccinedetails-getById?vaccineDetailsId=${vaccineDetailsId}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': '*/*',
+                        'Authorization': `Bearer ${savedToken}`
+                    }
+                });
 
                 if (!response.ok) {
                     throw new Error(`API error: ${response.status} ${response.statusText}`);
                 }
 
-                const responseData = await response.json();
-                console.log("API Response:", responseData);
-
-                // Tìm vaccine có vaccineId trùng với id từ URL
-                const vaccineData = responseData.find(item => item.vaccineId === id) || responseData[0];
+                const vaccineData = await response.json();
+                console.log("API Response:", vaccineData);
 
                 if (!vaccineData) {
                     throw new Error('Không tìm thấy thông tin vaccine');
                 }
 
-                console.log("Selected Vaccine Data:", vaccineData);
-
-                // Định dạng dữ liệu cho phù hợp với UI
+                // Định dạng dữ liệu theo response API mới
                 const formattedVaccine = {
-                    id: vaccineData.vaccineId || id,
-                    detailsId: vaccineData.vaccineDetailsId || 'Không có mã',
-                    name: vaccineData.doseName || 'Không có tên',
+                    // UUID fields
+                    vaccineDetailsId: vaccineData.vaccineDetailsId || null,
+                    vaccineId: vaccineData.vaccineId || null,
+                    vaccinationSeriesId: vaccineData.vaccinationSeriesId || null,
+                    // Integer fields
+                    doseRequire: vaccineData.doseRequire ? parseInt(vaccineData.doseRequire) : 1,
+                    currentDose: vaccineData.currentDose ? parseInt(vaccineData.currentDose) : null,
+                    quantity: vaccineData.quantity ? parseInt(vaccineData.quantity) : 0,
+                    dateBetweenDoses: vaccineData.dateBetweenDoses ? parseInt(vaccineData.dateBetweenDoses) : 0,
+                    // String fields
+                    doseName: vaccineData.doseName || "",
+                    imageUrl: vaccineData.imageUrl || "",
+                    manufacturer: vaccineData.manufacturer || "",
+                    status: vaccineData.status || "",
+                    // Double field
+                    price: vaccineData.price ? parseFloat(vaccineData.price) : 0.0,
+                    // DateTime fields
+                    createdAt: vaccineData.createdAt || null,
+                    updateAt: vaccineData.updateAt || null,
+                    // Additional display fields for UI
                     description: 'Vaccine phòng ngừa bệnh truyền nhiễm',
                     ageGroup: 'Phù hợp với mọi lứa tuổi',
-                    price: vaccineData.price || 0,
-                    doses: vaccineData.doseRequire || 1,
-                    manufacturer: vaccineData.manufacturer || 'Chưa có thông tin',
                     schedule: [
-                        `Liều lượng: ${vaccineData.doseRequire || '1'} mũi`,
-                        `Thời gian giữa các mũi: ${vaccineData.dateBetweenDoses || '0'} ngày`
+                        `Liều lượng: ${vaccineData.doseRequire ? parseInt(vaccineData.doseRequire) : 1} mũi`,
+                        `Thời gian giữa các mũi: ${vaccineData.dateBetweenDoses ? parseInt(vaccineData.dateBetweenDoses) : 0} ngày`
                     ],
-                    sideEffects: 'Có thể gặp một số tác dụng phụ nhẹ như: sốt nhẹ, đau tại chỗ tiêm, mệt mỏi. Các triệu chứng này thường tự hết sau 1-2 ngày.',
-                    contraindications: 'Không tiêm cho người đang bị sốt, bệnh cấp tính hoặc có tiền sử dị ứng với bất kỳ thành phần nào của vaccine.',
-                    benefits: 'Bảo vệ cơ thể khỏi các bệnh truyền nhiễm nguy hiểm, giảm nguy cơ biến chứng và tử vong.',
-                    longDescription: 'Thông tin chi tiết về vaccine sẽ được cập nhật sau.',
-                    quantity: vaccineData.quantity || 0,
-                    createdAt: vaccineData.createdAt || '',
-                    updateAt: vaccineData.updateAt || '',
-                    status: vaccineData.status || 'Đang cập nhật',
-                    dateBetweenDoses: vaccineData.dateBetweenDoses || 0,
-                    imageUrl: vaccineData.imageUrl || null
+                    sideEffects: 'Có thể gặp một số tác dụng phụ nhẹ như: sốt nhẹ, đau tại chỗ tiêm, mệt mỏi.',
+                    contraindications: 'Không tiêm cho người đang bị sốt, bệnh cấp tính.',
+                    benefits: 'Bảo vệ cơ thể khỏi các bệnh truyền nhiễm nguy hiểm.'
                 };
+
+                // Format date for display
+                if (formattedVaccine.createdAt) {
+                    formattedVaccine.createdAtFormatted = new Date(formattedVaccine.createdAt).toLocaleString('vi-VN');
+                }
+                if (formattedVaccine.updateAt) {
+                    formattedVaccine.updateAtFormatted = new Date(formattedVaccine.updateAt).toLocaleString('vi-VN');
+                }
 
                 console.log("Formatted Vaccine:", formattedVaccine);
                 setVaccine(formattedVaccine);
@@ -113,18 +130,18 @@ const VaccineDetail = () => {
             const userId = user.userId || user.userID || user.id;
 
             // Kiểm tra vaccineDetailsId có tồn tại không
-            if (!vaccine.detailsId) {
+            if (!vaccine.vaccineDetailsId) {
                 throw new Error('Không tìm thấy thông tin vaccine');
             }
 
             console.log('Adding to cart:', {
-                vaccineDetailsId: vaccine.detailsId,
+                vaccineDetailsId: vaccine.vaccineDetailsId,
                 userId: userId,
                 quantity: 1
             });
 
             // Gọi API để thêm vào giỏ hàng
-            const response = await fetch(`/api/cart/add/${vaccine.detailsId}/1/${userId}`, {
+            const response = await fetch(`/api/cart/add/${vaccine.vaccineDetailsId}/1/${userId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -147,20 +164,19 @@ const VaccineDetail = () => {
 
             // Kiểm tra xem vaccine đã có trong giỏ hàng chưa
             const existingItemIndex = currentCart.findIndex(item =>
-                item.id === vaccine.id ||
-                item.detailsId === vaccine.detailsId
+                item.vaccineDetailsId === vaccine.vaccineDetailsId
             );
 
             if (existingItemIndex === -1) {
                 // Thêm mới vào giỏ hàng
                 currentCart.push({
-                    id: vaccine.id,
-                    detailsId: vaccine.detailsId,
-                    name: vaccine.name,
+                    vaccineDetailsId: vaccine.vaccineDetailsId,
+                    vaccineId: vaccine.vaccineId,
+                    doseName: vaccine.doseName,
                     price: vaccine.price,
                     quantity: 1,
                     manufacturer: vaccine.manufacturer,
-                    doses: vaccine.doses,
+                    currentDose: vaccine.currentDose,
                     dateBetweenDoses: vaccine.dateBetweenDoses
                 });
 
@@ -271,7 +287,7 @@ const VaccineDetail = () => {
                                 <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
                                 </svg>
-                                <span className="ml-1 text-gray-500 md:ml-2">{vaccine.name}</span>
+                                <span className="ml-1 text-gray-500 md:ml-2">{vaccine.doseName}</span>
                             </div>
                         </li>
                     </ol>
@@ -295,7 +311,7 @@ const VaccineDetail = () => {
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="p-6 border-b border-gray-200">
                         <div className="flex justify-between items-start">
-                            <h1 className="text-3xl font-bold text-gray-800">{vaccine.name}</h1>
+                            <h1 className="text-3xl font-bold text-gray-800">{vaccine.doseName}</h1>
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                 {isAvailable ? 'Còn hàng' : 'Hết hàng'}
                             </span>
@@ -310,18 +326,36 @@ const VaccineDetail = () => {
                                     <h2 className="text-xl font-bold text-blue-900 mb-4">Thông tin cơ bản</h2>
                                     <div className="space-y-4">
                                         <div className="flex justify-between">
+                                            <span className="font-medium text-gray-700">Ngày tạo:</span>
+                                            <span>{vaccine.createdAtFormatted || 'Chưa có thông tin'}</span>
+                                        </div>
+                                        {vaccine.updateAt && (
+                                            <div className="flex justify-between">
+                                                <span className="font-medium text-gray-700">Ngày cập nhật:</span>
+                                                <span>{vaccine.updateAtFormatted}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Giá tiêm:</span>
-                                            <span className="font-bold text-blue-600">{formatPrice(vaccine.price)}/mũi</span>
+                                            <span className="font-bold text-blue-600">
+                                                {new Intl.NumberFormat('vi-VN', { 
+                                                    style: 'currency', 
+                                                    currency: 'VND' 
+                                                }).format(vaccine.price)}
+                                            </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">Số mũi tiêm:</span>
-                                            <span>{vaccine.doses} mũi</span>
+                                            <span className="font-medium text-gray-700">Số mũi cần tiêm:</span>
+                                            <span>{vaccine.doseRequire} mũi</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-gray-700">Mũi tiêm hiện tại:</span>
+                                            <span>{vaccine.currentDose || 'Chưa tiêm'}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Thời gian giữa các mũi:</span>
                                             <span>{vaccine.dateBetweenDoses} ngày</span>
                                         </div>
-                                       
                                         <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Nhà sản xuất:</span>
                                             <span>{vaccine.manufacturer}</span>

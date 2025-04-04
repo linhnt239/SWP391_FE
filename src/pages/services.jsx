@@ -4,11 +4,13 @@ import DefaultLayout from '@/components/layout/DefaultLayout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSyringe, faInfoCircle, faCalendarAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 const Services = () => {
     const [vaccines, setVaccines] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchVaccines = async () => {
@@ -105,10 +107,12 @@ const Services = () => {
                                                 <FontAwesomeIcon icon={faSyringe} className="mr-2" />
                                                 <span>{vaccine.doses} mũi</span>
                                             </div>
-                                            <Link href={`/vaccine/${vaccine.id}`} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
-                                                <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
-                                                Xem chi tiết
-                                            </Link>
+                                            <button
+                                                onClick={() => router.push(`/vaccine/listVaccineDetail?vaccineId=${vaccine.id}`)}
+                                                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                            >
+                                                <span>Xem chi tiết</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

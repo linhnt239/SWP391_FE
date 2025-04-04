@@ -1,3 +1,4 @@
+// src/components/staff/VaccineManagementSection.js
 import React, { useState, useEffect } from 'react';
 
 const VaccineManagementSection = ({
@@ -15,12 +16,12 @@ const VaccineManagementSection = ({
   handleDeleteVaccine,
   handleEditVaccine,
   handleSaveEditVaccine,
-  handleOpenVaccineDetailModal,
+  handleOpenVaccineDetailModal, // Hàm này sẽ trả về dữ liệu chi tiết mới
 }) => {
   const [showVaccineDetails, setShowVaccineDetails] = useState(false);
   const [selectedVaccineId, setSelectedVaccineId] = useState(null);
   const [vaccineDetails, setVaccineDetails] = useState([]);
-  const [fetchLoading, setFetchLoading] = useState({}); // Thay đổi thành object
+  const [fetchLoading, setFetchLoading] = useState(false);
   const [deleteDetailLoading, setDeleteDetailLoading] = useState({});
   const [editDetailId, setEditDetailId] = useState(null);
   const [editedDetail, setEditedDetail] = useState({
@@ -36,6 +37,7 @@ const VaccineManagementSection = ({
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState('');
 
+  // Callback để cập nhật state ngay khi thêm chi tiết mới
   const handleAddDetailCallback = (newDetail) => {
     setVaccineDetails((prevDetails) => [...prevDetails, newDetail]);
   };
@@ -43,7 +45,7 @@ const VaccineManagementSection = ({
   // Fetch vaccine details
   const handleViewDetails = async (vaccineId) => {
     setSelectedVaccineId(vaccineId);
-    setFetchLoading((prev) => ({ ...prev, [vaccineId]: true })); // Chỉ loading cho vaccineId này
+    setFetchLoading(true);
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
@@ -65,9 +67,9 @@ const VaccineManagementSection = ({
       setVaccineDetails(Array.isArray(data.vaccineDetails) ? data.vaccineDetails : Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching vaccine details:', error.message);
-      setVaccineDetails([]);
+      setVaccineDetails([]); // Không báo lỗi, chỉ đặt state rỗng
     } finally {
-      setFetchLoading((prev) => ({ ...prev, [vaccineId]: false })); // Tắt loading cho vaccineId này
+      setFetchLoading(false);
       setShowVaccineDetails(true);
     }
   };
@@ -122,7 +124,7 @@ const VaccineManagementSection = ({
       return;
     }
 
-    setFetchLoading((prev) => ({ ...prev, [selectedVaccineId]: true })); // Loading cho vaccine đang chỉnh sửa
+    setFetchLoading(true);
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
@@ -157,20 +159,23 @@ const VaccineManagementSection = ({
     } catch (error) {
       console.error('Error updating vaccine detail:', error.message);
     } finally {
-      setFetchLoading((prev) => ({ ...prev, [selectedVaccineId]: false })); // Tắt loading
+      setFetchLoading(false);
     }
   };
 
+  // Open image popup
   const handleOpenImagePopup = (imageUrl) => {
     setSelectedImageUrl(imageUrl);
     setShowImagePopup(true);
   };
 
+  // Close image popup
   const handleCloseImagePopup = () => {
     setShowImagePopup(false);
     setSelectedImageUrl('');
   };
 
+  // Back to vaccine list
   const handleBackToVaccines = () => {
     setShowVaccineDetails(false);
     setSelectedVaccineId(null);
@@ -194,7 +199,7 @@ const VaccineManagementSection = ({
           {showAddVaccineForm && (
             <div className="grid gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Tên bệnh</label>
+                <label className="block text-sm font-medium text-gray-700">Tên bệnh (illnessName)</label>
                 <input
                   type="text"
                   value={newVaccine.illnessName}
@@ -203,16 +208,16 @@ const VaccineManagementSection = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Mô tả</label>
+                <label className="block text-sm font-medium text-gray-700">Mô tả (description)</label>
                 <input
                   type="text"
-                  value={newVaccine.descriptions}
-                  onChange={(e) => setNewVaccine({ ...newVaccine, descriptions: e.target.value })}
+                  value={newVaccine.description}
+                  onChange={(e) => setNewVaccine({ ...newVaccine, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Giới hạn tháng</label>
+                <label className="block text-sm font-medium text-gray-700">Giới hạn tuổi (ageLimit)</label>
                 <input
                   type="number"
                   value={newVaccine.ageLimit}
@@ -223,7 +228,9 @@ const VaccineManagementSection = ({
               <div className="flex items-end">
                 <button
                   onClick={handleAddVaccine}
-                  className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center ${
+                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                   disabled={loading}
                 >
                   {loading ? (
@@ -294,13 +301,14 @@ const VaccineManagementSection = ({
                 ) : (
                   <>
                     <span>{vaccine.illnessName || 'N/A'}</span>
-                    <span>{vaccine.descriptions || 'N/A'}</span>
+                    <span>{vaccine.description || 'N/A'}</span>
                     <span>{vaccine.ageLimit || 'N/A'}</span>
                     <div className="flex justify-center space-x-2">
                       <button
                         onClick={() => handleDeleteVaccine(vaccine.vaccineId)}
-                        className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${deleteLoading[vaccine.vaccineId] ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
+                        className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${
+                          deleteLoading[vaccine.vaccineId] ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         disabled={deleteLoading[vaccine.vaccineId]}
                       >
                         {deleteLoading[vaccine.vaccineId] ? (
@@ -328,29 +336,12 @@ const VaccineManagementSection = ({
                     <div className="flex justify-center space-x-2">
                       <button
                         onClick={() => handleViewDetails(vaccine.vaccineId)}
-                        className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center ${fetchLoading[vaccine.vaccineId] ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={fetchLoading[vaccine.vaccineId]}
+                        className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 ${
+                          fetchLoading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={fetchLoading}
                       >
-                        {fetchLoading[vaccine.vaccineId] ? (
-                          <>
-                            <svg
-                              className="animate-spin h-5 w-5 mr-2 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            Đang tải...
-                          </>
-                        ) : (
-                          'Xem chi tiết'
-                        )}
+                        {fetchLoading ? 'Đang tải...' : 'Xem chi tiết'}
                       </button>
                     </div>
                   </>
@@ -381,7 +372,7 @@ const VaccineManagementSection = ({
               </button>
             </div>
           </div>
-          {fetchLoading[selectedVaccineId] ? (
+          {fetchLoading ? (
             <p className="text-gray-500">Đang tải chi tiết vaccine...</p>
           ) : vaccineDetails.length > 0 ? (
             <>
@@ -461,14 +452,36 @@ const VaccineManagementSection = ({
                         <div className="flex justify-center space-x-2">
                           <button
                             onClick={handleSaveEditDetail}
-                            className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                            className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center ${
+                              fetchLoading ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                            disabled={fetchLoading}
                           >
-                            Lưu
+                            {fetchLoading ? (
+                              <>
+                                <svg
+                                  className="animate-spin h-5 w-5 mr-2 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  />
+                                </svg>
+                                Đang lưu...
+                              </>
+                            ) : (
+                              'Lưu'
+                            )}
                           </button>
                           <button
                             onClick={() => setEditDetailId(null)}
                             className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
-                            disabled={fetchLoading[selectedVaccineId]}
+                            disabled={fetchLoading}
                           >
                             Hủy
                           </button>
@@ -505,10 +518,9 @@ const VaccineManagementSection = ({
                           </button>
                           <button
                             onClick={() => handleDeleteDetail(selectedVaccineId, detail.vaccineDetailsId)}
-                            className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${deleteDetailLoading[detail.vaccineDetailsId]
-                              ? 'opacity-50 cursor-not-allowed'
-                              : ''
-                              }`}
+                            className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${
+                              deleteDetailLoading[detail.vaccineDetailsId] ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                             disabled={deleteDetailLoading[detail.vaccineDetailsId]}
                           >
                             {deleteDetailLoading[detail.vaccineDetailsId] ? (
@@ -545,6 +557,7 @@ const VaccineManagementSection = ({
         </>
       )}
 
+      {/* Image Popup */}
       {showImagePopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg shadow-lg">
