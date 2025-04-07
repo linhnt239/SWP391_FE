@@ -12,7 +12,7 @@ const OverviewSection = ({ vaccines, feedbacks, services }) => {
                     <p className="text-2xl font-bold text-blue-900">{vaccines.length}</p>
                 </div>
                 <div className="bg-green-100 p-4 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold text-green-900">Phản hồi chưa xử lý</h3>
+                    <h3 className="text-lg font-semibold text-green-900">Phản ứng sau tiêm</h3>
                     <p className="text-2xl font-bold text-green-900">{feedbacks.filter((f) => !f.response).length}</p>
                 </div>
                 <div className="bg-yellow-100 p-4 rounded-lg text-center">

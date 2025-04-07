@@ -157,7 +157,7 @@ const ListVaccineDetail = () => {
                                                     <span className="text-gray-600">Nhà sản xuất: {detail.manufacturer || 'Chưa cập nhật'}</span>
                                                 </div>
                                                 <div className="flex items-center">
-                                                    <span className="text-gray-600">Thời gian chờ: {detail.dateBetweenDoses || 0} ngày</span>
+                                                    <span className="text-gray-600">Khoảng cách giữa các mũi: {detail.dateBetweenDoses || 0} ngày</span>
                                                 </div>
                                             </div>
                                             <div className="space-y-2">

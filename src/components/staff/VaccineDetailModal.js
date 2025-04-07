@@ -17,7 +17,7 @@ const VaccineDetailModal = ({
                 <h2 className="text-xl font-semibold text-blue-900 mb-4">Thêm Vaccine Detail</h2>
                 <div className="grid gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Tên mũi (doseName)</label>
+                        <label className="block text-sm font-medium text-gray-700">Tên mũi</label>
                         <input
                             type="text"
                             value={vaccineDetail.doseName}
@@ -26,7 +26,7 @@ const VaccineDetailModal = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Số liều cần thiết (doseRequire)</label>
+                        <label className="block text-sm font-medium text-gray-700">Số mũi tiêm cần thiết</label>
                         <input
                             type="number"
                             value={vaccineDetail.doseRequire}
@@ -35,7 +35,7 @@ const VaccineDetailModal = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">URL hình ảnh (imageUrl)</label>
+                        <label className="block text-sm font-medium text-gray-700">URL hình ảnh</label>
                         <input
                             type="text"
                             value={vaccineDetail.imageUrl}
@@ -44,7 +44,7 @@ const VaccineDetailModal = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Nhà sản xuất (manufacturer)</label>
+                        <label className="block text-sm font-medium text-gray-700">Nhà sản xuất</label>
                         <input
                             type="text"
                             value={vaccineDetail.manufacturer}
@@ -53,7 +53,7 @@ const VaccineDetailModal = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Số lượng (quantity)</label>
+                        <label className="block text-sm font-medium text-gray-700">Số lượng</label>
                         <input
                             type="number"
                             value={vaccineDetail.quantity}
@@ -62,16 +62,7 @@ const VaccineDetailModal = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Tồn kho (stock)</label>
-                        <input
-                            type="number"
-                            value={vaccineDetail.stock}
-                            onChange={(e) => setVaccineDetail({ ...vaccineDetail, stock: parseInt(e.target.value) || 0 })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Khoảng cách giữa các liều (dateBetweenDoses)</label>
+                        <label className="block text-sm font-medium text-gray-700">Khoảng cách giữa các liều</label>
                         <input
                             type="number"
                             value={vaccineDetail.dateBetweenDoses}
@@ -80,7 +71,7 @@ const VaccineDetailModal = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Giá (price)</label>
+                        <label className="block text-sm font-medium text-gray-700">Giá (đồng)</label>
                         <input
                             type="number"
                             value={vaccineDetail.price}

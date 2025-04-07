@@ -51,6 +51,9 @@ const VaccineDetail = () => {
                     // Integer fields
                     doseRequire: vaccineData.doseRequire ? parseInt(vaccineData.doseRequire) : 1,
                     currentDose: vaccineData.currentDose ? parseInt(vaccineData.currentDose) : null,
+                    ageRequired: vaccineData.ageRequired ? parseInt(vaccineData.ageRequired) : 0,
+                    boosterInterval: vaccineData.boosterInterval ? parseInt(vaccineData.boosterInterval) : 0,
+                    dosageAmount: vaccineData.dosageAmount ? parseInt(vaccineData.dosageAmount) : 0,
                     quantity: vaccineData.quantity ? parseInt(vaccineData.quantity) : 0,
                     dateBetweenDoses: vaccineData.dateBetweenDoses ? parseInt(vaccineData.dateBetweenDoses) : 0,
                     // String fields
@@ -65,7 +68,6 @@ const VaccineDetail = () => {
                     updateAt: vaccineData.updateAt || null,
                     // Additional display fields for UI
                     description: 'Vaccine phòng ngừa bệnh truyền nhiễm',
-                    ageGroup: 'Phù hợp với mọi lứa tuổi',
                     schedule: [
                         `Liều lượng: ${vaccineData.doseRequire ? parseInt(vaccineData.doseRequire) : 1} mũi`,
                         `Thời gian giữa các mũi: ${vaccineData.dateBetweenDoses ? parseInt(vaccineData.dateBetweenDoses) : 0} ngày`
@@ -358,6 +360,14 @@ const VaccineDetail = () => {
                                             <span className={`font-bold ${vaccine.quantity > 50 ? 'text-green-600' : vaccine.quantity > 10 ? 'text-yellow-600' : 'text-red-600'}`}>
                                                 {vaccine.quantity} liều
                                             </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-gray-700">Độ tuổi yêu cầu:</span>
+                                            <span>{vaccine.ageRequired} tuổi</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-gray-700">Liều lượng:</span>
+                                            <span>{vaccine.dosageAmount} ml</span>
                                         </div>
                                     </div>
                                 </div>

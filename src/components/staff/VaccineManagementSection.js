@@ -8,7 +8,6 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
     imageUrl: '',
     manufacturer: '',
     quantity: 0,
-    stock: 0,
     dateBetweenDoses: '',
     price: 0,
     status: 'active', // Default status, adjust as needed
@@ -35,6 +34,18 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
     }
     if (newDetail.price < 0) {
       setErrorMessage('Giá không được nhỏ hơn 0!');
+      return false;
+    }
+    if (newDetail.boosterInterval < 0) {
+      setErrorMessage('Khoảng thời gian tăng cường không được nhỏ hơn 0!');
+      return false;
+    }
+    if (newDetail.ageRequired < 0) {
+      setErrorMessage('Tuổi yêu cầu không được nhỏ hơn 0!');
+      return false;
+    }
+    if (newDetail.dateBetweenDoses < 0) {
+      setErrorMessage('Khoảng cách giữa các mũi không được nhỏ hơn 0!');
       return false;
     }
     setErrorMessage('');
@@ -65,7 +76,6 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
           imageUrl: newDetail.imageUrl,
           manufacturer: newDetail.manufacturer,
           quantity: parseInt(newDetail.quantity) || 0,
-          stock: parseInt(newDetail.stock) || 0,
           dateBetweenDoses: newDetail.dateBetweenDoses,
           price: parseInt(newDetail.price) || 0,
           status: newDetail.status,
@@ -97,7 +107,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
         <h3 className="text-2xl font-bold text-blue-900 mb-6">Thêm Vaccine Detail</h3>
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tên mũi (doseName)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tên mũi</label>
             <input
               type="text"
               value={newDetail.doseName}
@@ -106,7 +116,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Số liều cần thiết (doseRequire)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Số mũi tiêm cần thiết</label>
             <input
               type="text"
               value={newDetail.doseRequire}
@@ -115,7 +125,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">URL hình ảnh (imageUrl)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">URL hình ảnh</label>
             <input
               type="text"
               value={newDetail.imageUrl}
@@ -124,7 +134,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nhà sản xuất (manufacturer)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nhà sản xuất</label>
             <input
               type="text"
               value={newDetail.manufacturer}
@@ -133,7 +143,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng (quantity)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng</label>
             <input
               type="number"
               value={newDetail.quantity}
@@ -142,7 +152,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng cách giữa các liều (dateBetweenDoses)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng cách giữa các liều</label>
             <input
               type="text"
               value={newDetail.dateBetweenDoses}
@@ -151,7 +161,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Giá (price)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Giá (đồng)</label>
             <input
               type="number"
               value={newDetail.price}
@@ -160,7 +170,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi yêu cầu (ageRequired)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi yêu cầu</label>
             <input
               type="number"
               value={newDetail.ageRequired}
@@ -178,7 +188,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng thời gian tăng cường (boosterInterval)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng thời gian tăng cường</label>
             <input
               type="number"
               value={newDetail.boosterInterval}
@@ -258,7 +268,6 @@ const VaccineManagementSection = ({
     imageUrl: '',
     manufacturer: '',
     quantity: 0,
-    stock: 0,
     dateBetweenDoses: '',
     price: 0,
     ageRequired: 0,
@@ -326,7 +335,9 @@ const VaccineManagementSection = ({
       }
 
       const data = await response.json();
-      setVaccineDetails(Array.isArray(data.vaccineDetails) ? data.vaccineDetails : Array.isArray(data) ? data : []);
+      const vaccineDetails = Array.isArray(data.vaccineDetails) ? data.vaccineDetails : Array.isArray(data) ? data : [];
+      console.log('Fetched vaccine details:', vaccineDetails);
+      setVaccineDetails(vaccineDetails);
     } catch (error) {
       console.error('Error fetching vaccine details:', error.message);
       setVaccineDetails([]);
@@ -371,7 +382,6 @@ const VaccineManagementSection = ({
       imageUrl: detail.imageUrl || '',
       manufacturer: detail.manufacturer || '',
       quantity: detail.quantity || 0,
-      stock: detail.stock || 0,
       dateBetweenDoses: detail.dateBetweenDoses || '',
       price: detail.price || 0,
       ageRequired: detail.ageRequired || 0,
@@ -401,7 +411,6 @@ const VaccineManagementSection = ({
         body: JSON.stringify({
           ...editedDetail,
           quantity: parseInt(editedDetail.quantity) || 0,
-          stock: parseInt(editedDetail.stock) || 0,
           dateBetweenDoses: parseInt(editedDetail.dateBetweenDoses) || 0,
           price: parseInt(editedDetail.price) || 0,
           ageRequired: parseInt(editedDetail.ageRequired) || 0,
@@ -689,16 +698,7 @@ const VaccineManagementSection = ({
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            value={editedDetail.stock}
-                            onChange={(e) =>
-                              setEditedDetail({ ...editedDetail, stock: parseInt(e.target.value) || 0 })
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
+
                         <div className="col-span-1">
                           <input
                             type="text"
@@ -802,7 +802,6 @@ const VaccineManagementSection = ({
                         </div>
                         <span className="col-span-1">{detail.manufacturer || 'N/A'}</span>
                         <span className="col-span-1">{detail.quantity || 'N/A'}</span>
-                        <span className="col-span-1">{detail.stock || 'N/A'}</span>
                         <span className="col-span-1">{detail.dateBetweenDoses || 'N/A'}</span>
                         <span className="col-span-1">{detail.price ? detail.price.toLocaleString() : 'N/A'}</span>
                         <span className="col-span-1">{detail.ageRequired || 'N/A'}</span>
@@ -833,7 +832,7 @@ const VaccineManagementSection = ({
                                     className="opacity-75"
                                     fill="currentColor"
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                />
+                                  />
                                 </svg>
                                 Đang xóa...
                               </>

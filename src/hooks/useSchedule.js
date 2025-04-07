@@ -271,12 +271,56 @@ export const useSchedule = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': '*/*'
                 },
                 body: JSON.stringify(checkoutData)
             });
 
             if (!response.ok) {
+                const status = response.status;
+
+                // Nếu là lỗi 400, thử đọc thông báo lỗi từ response
+                if (status === 400) {
+                    try {
+                        const errorData = await response.json();
+
+                        // Kiểm tra thông báo lỗi liên quan đến độ tuổi
+                        if (errorData && errorData.message && errorData.message.includes("age")) {
+                            toast.update(toastId, {
+                                render: `Vaccine không phù hợp với độ tuổi của trẻ`,
+                                type: 'error',
+                                isLoading: false,
+                                autoClose: 5000
+                            });
+                        } else if (errorData && errorData.error && errorData.error === "InvalidDosage") {
+                            toast.update(toastId, {
+                                render: `Vaccine không phù hợp với độ tuổi của trẻ`,
+                                type: 'error',
+                                isLoading: false,
+                                autoClose: 5000
+                            });
+                        } else {
+                            toast.update(toastId, {
+                                render: errorData.message || `Đã xảy ra lỗi khi thanh toán (${status})`,
+                                type: 'error',
+                                isLoading: false,
+                                autoClose: 5000
+                            });
+                        }
+                    } catch (jsonError) {
+                        // Nếu không phải JSON, đọc phản hồi dưới dạng text
+                        const errorText = await response.text();
+                        toast.update(toastId, {
+                            render: `Đã xảy ra lỗi: ${errorText || 'Không thể thanh toán'}`,
+                            type: 'error',
+                            isLoading: false,
+                            autoClose: 5000
+                        });
+                    }
+                    return;
+                }
+
                 const errorText = await response.text();
                 throw new Error(errorText);
             }
@@ -321,7 +365,7 @@ export const useSchedule = () => {
                 dateOfBirth: selectedChild ? selectedChild.dateOfBirth : formData.dateOfBirth,
                 medicalIssue: "None",
                 appointmentDate: formData.preferredDate,
-                timeStart: formData.preferredTime, // Gửi chuỗi thời gian như "13:30" giống VnPay
+                timeStart: formData.preferredTime,
                 note: formData.note || ""
             };
 
@@ -340,7 +384,8 @@ export const useSchedule = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': '*/*'
                 },
                 body: JSON.stringify(checkoutData)
             });
@@ -348,6 +393,37 @@ export const useSchedule = () => {
             // Xử lý response
             if (!response.ok) {
                 const status = response.status;
+
+                // Nếu là lỗi 400, thử đọc thông báo lỗi từ response
+                if (status === 400) {
+                    const errorData = await response.json();
+
+                    // Kiểm tra thông báo lỗi liên quan đến độ tuổi
+                    if (errorData && errorData.message && errorData.message.includes("age")) {
+                        toast.update(toastId, {
+                            render: `Vaccine không phù hợp với độ tuổi của trẻ`,
+                            type: 'error',
+                            isLoading: false,
+                            autoClose: 5000
+                        });
+                    } else if (errorData && errorData.error && errorData.error === "InvalidDosage") {
+                        toast.update(toastId, {
+                            render: `Vaccine không phù hợp với độ tuổi của trẻ`,
+                            type: 'error',
+                            isLoading: false,
+                            autoClose: 5000
+                        });
+                    } else {
+                        toast.update(toastId, {
+                            render: errorData.message || `Đã xảy ra lỗi khi đặt lịch (${status})`,
+                            type: 'error',
+                            isLoading: false,
+                            autoClose: 5000
+                        });
+                    }
+                    return;
+                }
+
                 throw new Error(`HTTP error ${status}`);
             }
 
