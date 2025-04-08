@@ -150,7 +150,7 @@ const Home = () => {
                         <td className="py-3 px-4">
                           {vaccine.ageLimit === 0
                             ? "Mọi lứa tuổi"
-                            : `Trẻ từ ${vaccine.ageLimit} tháng tuổi`}
+                            : `Trẻ từ ${vaccine.ageRequired} tháng tuổi`}
                         </td>
                         <td className="py-3 px-4">
                           {vaccine.vaccineDetailsList[0].price.toLocaleString()} VNĐ
