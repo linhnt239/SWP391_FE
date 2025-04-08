@@ -367,26 +367,26 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
             Chi tiết Vaccine: {vaccineName}
           </h2>
           <div className="flex items-center space-x-3">
-            <button
+          <button
               onClick={() => setShowAddDetailModal(true)}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg 
               transition-all duration-200 flex items-center space-x-2 transform hover:scale-105"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
+                      </svg>
               <span>Thêm mũi tiêm</span>
-            </button>
-            <button
+                </button>
+                    <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
+                            </svg>
+                      </button>
+                    </div>
+                    </div>
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-8rem)]">
           {loading ? (
@@ -395,149 +395,149 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
             </div>
           ) : vaccineDetails.length > 0 ? (
             <div className="grid gap-4">
-              {vaccineDetails.map((detail) => (
+                {vaccineDetails.map((detail) => (
                 <div
-                  key={detail.vaccineDetailsId}
+                    key={detail.vaccineDetailsId}
                   className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md 
                   transition-shadow duration-200 p-4"
-                >
-                  {editDetailId === detail.vaccineDetailsId ? (
+                  >
+                    {editDetailId === detail.vaccineDetailsId ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Tên mũi</label>
-                        <input
-                          type="text"
-                          value={editedDetail.doseName}
-                          onChange={(e) => setEditedDetail({ ...editedDetail, doseName: e.target.value })}
+                          <input
+                            type="text"
+                            value={editedDetail.doseName}
+                            onChange={(e) => setEditedDetail({ ...editedDetail, doseName: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Số liều cần thiết</label>
-                        <input
-                          type="text"
-                          value={editedDetail.doseRequire}
-                          onChange={(e) => setEditedDetail({ ...editedDetail, doseRequire: e.target.value })}
+                          <input
+                            type="text"
+                            value={editedDetail.doseRequire}
+                            onChange={(e) => setEditedDetail({ ...editedDetail, doseRequire: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">URL hình ảnh</label>
-                        <input
-                          type="text"
-                          value={editedDetail.imageUrl}
-                          onChange={(e) => setEditedDetail({ ...editedDetail, imageUrl: e.target.value })}
+                          <input
+                            type="text"
+                            value={editedDetail.imageUrl}
+                            onChange={(e) => setEditedDetail({ ...editedDetail, imageUrl: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nhà sản xuất</label>
-                        <input
-                          type="text"
-                          value={editedDetail.manufacturer}
-                          onChange={(e) => setEditedDetail({ ...editedDetail, manufacturer: e.target.value })}
+                          <input
+                            type="text"
+                            value={editedDetail.manufacturer}
+                            onChange={(e) => setEditedDetail({ ...editedDetail, manufacturer: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng</label>
-                        <input
-                          type="number"
-                          value={editedDetail.quantity}
+                          <input
+                            type="number"
+                            value={editedDetail.quantity}
                           onChange={(e) => setEditedDetail({ ...editedDetail, quantity: parseInt(e.target.value) || 0 })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng cách giữa các liều</label>
-                        <input
-                          type="text"
-                          value={editedDetail.dateBetweenDoses}
-                          onChange={(e) => setEditedDetail({ ...editedDetail, dateBetweenDoses: e.target.value })}
+                          <input
+                            type="text"
+                            value={editedDetail.dateBetweenDoses}
+                            onChange={(e) => setEditedDetail({ ...editedDetail, dateBetweenDoses: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Giá (đồng)</label>
-                        <input
-                          type="number"
-                          value={editedDetail.price}
+                          <input
+                            type="number"
+                            value={editedDetail.price}
                           onChange={(e) => setEditedDetail({ ...editedDetail, price: parseInt(e.target.value) || 0 })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi yêu cầu</label>
-                        <input
-                          type="number"
-                          value={editedDetail.ageRequired}
+                          <input
+                            type="number"
+                            value={editedDetail.ageRequired}
                           onChange={(e) => setEditedDetail({ ...editedDetail, ageRequired: parseInt(e.target.value) || 0 })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Liều lượng (ml)</label>
-                        <input
-                          type="number"
-                          value={editedDetail.dosageAmount}
+                          <input
+                            type="number"
+                            value={editedDetail.dosageAmount}
                           onChange={(e) => setEditedDetail({ ...editedDetail, dosageAmount: parseInt(e.target.value) || 0 })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng thời gian tăng cường</label>
-                        <input
-                          type="number"
-                          value={editedDetail.boosterInterval}
+                          <input
+                            type="number"
+                            value={editedDetail.boosterInterval}
                           onChange={(e) => setEditedDetail({ ...editedDetail, boosterInterval: parseInt(e.target.value) || 0 })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          />
+                        </div>
                       <div className="md:col-span-3 flex justify-end space-x-2 pt-4 border-t mt-4">
-                        <button
-                          onClick={handleSaveEditDetail}
+                          <button
+                            onClick={handleSaveEditDetail}
                           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg
                           transition-all duration-200 flex items-center space-x-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
+                                </svg>
                           <span>Lưu thay đổi</span>
-                        </button>
-                        <button
-                          onClick={() => setEditDetailId(null)}
+                          </button>
+                          <button
+                            onClick={() => setEditDetailId(null)}
                           className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg
                           transition-all duration-200 flex items-center space-x-2"
-                        >
+                          >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                           </svg>
                           <span>Hủy</span>
-                        </button>
-                      </div>
+                          </button>
+                        </div>
                     </div>
-                  ) : (
+                    ) : (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="md:col-span-1">
-                        {detail.imageUrl ? (
-                          <img
-                            src={detail.imageUrl}
+                          {detail.imageUrl ? (
+                            <img
+                              src={detail.imageUrl}
                             alt={detail.doseName}
                             className="w-full h-48 object-cover rounded-lg"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
                             }}
-                          />
-                        ) : (
+                            />
+                          ) : (
                           <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
                             <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" 
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
-                        )}
-                      </div>
+                          )}
+                        </div>
                       <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                           <h3 className="font-semibold text-gray-800">Tên mũi</h3>
@@ -577,8 +577,8 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
                         </div>
                       </div>
                       <div className="md:col-span-4 flex justify-end space-x-2 pt-4 border-t">
-                        <button
-                          onClick={() => handleEditDetail(detail)}
+                          <button
+                            onClick={() => handleEditDetail(detail)}
                           className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg
                           transition-all duration-200 flex items-center space-x-2"
                         >
@@ -587,19 +587,19 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
                               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                           <span>Sửa</span>
-                        </button>
-                        <button
+                          </button>
+                          <button
                           onClick={() => handleDeleteDetail(detail.vaccineDetailsId)}
-                          disabled={deleteDetailLoading[detail.vaccineDetailsId]}
+                            disabled={deleteDetailLoading[detail.vaccineDetailsId]}
                           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg
                           transition-all duration-200 flex items-center space-x-2"
-                        >
-                          {deleteDetailLoading[detail.vaccineDetailsId] ? (
+                          >
+                            {deleteDetailLoading[detail.vaccineDetailsId] ? (
                             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                               <path className="opacity-75" fill="currentColor" 
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
+                                </svg>
                           ) : (
                             <>
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -608,13 +608,13 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
                               </svg>
                               <span>Xóa</span>
                             </>
-                          )}
-                        </button>
-                      </div>
+                            )}
+                          </button>
+                        </div>
                     </div>
-                  )}
+                    )}
                 </div>
-              ))}
+                ))}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -705,7 +705,7 @@ const VaccineManagementSection = ({
               </div>
             </div>
             <div className="mt-4 flex justify-end">
-              <button
+            <button
                 onClick={handleAddVaccine}
                 disabled={loading}
                 className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg
@@ -728,10 +728,10 @@ const VaccineManagementSection = ({
                     <span>Lưu Vaccine</span>
                   </>
                 )}
-              </button>
-            </div>
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
         {/* Vaccine List */}
         <div className="overflow-x-auto">
@@ -813,7 +813,7 @@ const VaccineManagementSection = ({
         onClose={() => setShowDetailsModal(false)}
         vaccineId={selectedVaccine?.vaccineId}
         vaccineName={selectedVaccine?.illnessName}
-      />
+        />
     </div>
   );
 };
