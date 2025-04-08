@@ -10,6 +10,7 @@ const ListVaccineDetail = () => {
     const [vaccineDetails, setVaccineDetails] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showDosageGuide, setShowDosageGuide] = useState(false);
 
     useEffect(() => {
         const fetchVaccineDetails = async () => {
@@ -81,6 +82,15 @@ const ListVaccineDetail = () => {
         }).format(price);
     };
 
+    // Thông tin liều lượng khuyến nghị
+    const dosageGuidelines = [
+        { ageRange: '0-2 tuổi', minDosage: 5, maxDosage: 10 },
+        { ageRange: '2-5 tuổi', minDosage: 10, maxDosage: 20 },
+        { ageRange: '5-10 tuổi', minDosage: 20, maxDosage: 30 },
+        { ageRange: '10-18 tuổi', minDosage: 15, maxDosage: 50 },
+        { ageRange: 'Trên 18 tuổi', minDosage: 50, maxDosage: 50 }
+    ];
+
     return (
         <DefaultLayout>
             <div className="container mx-auto px-4 py-8">
@@ -118,6 +128,45 @@ const ListVaccineDetail = () => {
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-800 mb-4">Chi tiết gói Vaccine</h1>
                         <p className="text-gray-600">Vui lòng chọn mũi tiêm phù hợp với nhu cầu của bạn</p>
+                    </div>
+
+                    {/* Thông tin liều lượng khuyến nghị */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-semibold text-blue-800">Liều lượng khuyến nghị theo độ tuổi</h3>
+                            <button
+                                onClick={() => setShowDosageGuide(!showDosageGuide)}
+                                className="text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                                {showDosageGuide ? 'Ẩn thông tin' : 'Xem thông tin'}
+                            </button>
+                        </div>
+
+                        {showDosageGuide && (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white rounded overflow-hidden">
+                                    <thead className="bg-blue-100">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-sm font-semibold text-blue-800">Độ tuổi</th>
+                                            <th className="px-4 py-2 text-left text-sm font-semibold text-blue-800">Liều lượng tối thiểu (ml)</th>
+                                            <th className="px-4 py-2 text-left text-sm font-semibold text-blue-800">Liều lượng tối đa (ml)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-blue-100">
+                                        {dosageGuidelines.map((item, index) => (
+                                            <tr key={index} className={index % 2 === 0 ? 'bg-blue-50' : 'bg-white'}>
+                                                <td className="px-4 py-2 text-sm text-gray-700">{item.ageRange}</td>
+                                                <td className="px-4 py-2 text-sm text-gray-700">{item.minDosage} ml</td>
+                                                <td className="px-4 py-2 text-sm text-gray-700">{item.maxDosage} ml</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <p className="mt-2 text-sm text-gray-600 italic">
+                                    Lưu ý: Liều lượng cụ thể sẽ được bác sĩ điều chỉnh tùy thuộc vào tình trạng sức khỏe của trẻ
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {loading ? (
@@ -159,19 +208,61 @@ const ListVaccineDetail = () => {
                                                 <div className="flex items-center">
                                                     <span className="text-gray-600">Khoảng cách giữa các mũi: {detail.dateBetweenDoses || 0} ngày</span>
                                                 </div>
+                                                <div className="flex items-center">
+                                                    <span className="text-gray-600">Độ tuổi tối thiểu: {detail.ageRequired || 0} tuổi</span>
+                                                </div>
                                             </div>
                                             <div className="space-y-2">
                                                 <div className="flex items-center">
                                                     <span className="text-gray-600">Số lượng còn lại: {detail.quantity || 0}</span>
                                                 </div>
                                                 <div className="flex items-center">
-                                                    <span className="font-bold text-blue-600">{formatPrice(detail.price || 0)}</span>
+                                                    <span className="text-gray-600">Số ml của mũi tiêm: {detail.dosageAmount || 0} ml</span>
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <span className="font-bold text-blue-600">Giá: {formatPrice(detail.price || 0)}</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex justify-between items-center">
+                                        {/* Thêm thông tin liều lượng phù hợp cho vaccine này */}
+                                        {/* <div className="bg-gray-50 p-3 rounded-md mb-4">
+                                            <h3 className="text-sm font-medium text-gray-700">Liều lượng khuyến nghị:</h3>
+                                            <ul className="mt-1 text-sm text-gray-600">
+                                                {detail.ageRequired <= 2 && (
+                                                    <li className="flex items-center">
+                                                        <span className="bg-blue-100 w-2 h-2 rounded-full mr-2"></span>
+                                                        Trẻ 0-2 tuổi: <span className="font-medium ml-1">0-10 ml</span>
+                                                    </li>
+                                                )}
+                                                {detail.ageRequired <= 5 && (
+                                                    <li className="flex items-center">
+                                                        <span className="bg-green-100 w-2 h-2 rounded-full mr-2"></span>
+                                                        Trẻ 2-5 tuổi: <span className="font-medium ml-1">10-20 ml</span>
+                                                    </li>
+                                                )}
+                                                {detail.ageRequired <= 10 && (
+                                                    <li className="flex items-center">
+                                                        <span className="bg-yellow-100 w-2 h-2 rounded-full mr-2"></span>
+                                                        Trẻ 5-10 tuổi: <span className="font-medium ml-1">20-30 ml</span>
+                                                    </li>
+                                                )}
+                                                {detail.ageRequired <= 18 && (
+                                                    <li className="flex items-center">
+                                                        <span className="bg-orange-100 w-2 h-2 rounded-full mr-2"></span>
+                                                        Trẻ 10-18 tuổi: <span className="font-medium ml-1">15-50 ml</span>
+                                                    </li>
+                                                )}
+                                                {detail.ageRequired > 18 && (
+                                                    <li className="flex items-center">
+                                                        <span className="bg-red-100 w-2 h-2 rounded-full mr-2"></span>
+                                                        Trên 18 tuổi: <span className="font-medium ml-1">50 ml</span>
+                                                    </li>
+                                                )}
+                                            </ul>
+                                        </div> */}
 
+                                        <div className="flex justify-between items-center">
                                             <button
                                                 onClick={() => handleViewDetail(detail.vaccineDetailsId)}
                                                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
