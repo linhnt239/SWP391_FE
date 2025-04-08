@@ -46,6 +46,8 @@ const VaccinationProcess = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editedTime, setEditedTime] = useState({ hour: 0, minute: 0, second: 0, nano: 0 });
     const [isEditingTime, setIsEditingTime] = useState(false);
+    const [newAppointmentDate, setNewAppointmentDate] = useState('');
+    const [newNote, setNewNote] = useState('');
 
     const handleSubmitFeedback = async () => {
         if (!feedback.trim()) {
@@ -107,6 +109,10 @@ const VaccinationProcess = () => {
             }
         }
 
+        // Khởi tạo giá trị mặc định cho ngày hẹn và ghi chú
+        setNewAppointmentDate(appointment.appointmentDate || '');
+        setNewNote(appointment.note || '');
+
         setShowEditTimeModal(true);
     };
 
@@ -147,15 +153,24 @@ const VaccinationProcess = () => {
             return;
         }
 
+        // Kiểm tra ngày tiêm mới phải sau ngày hiện tại
+        const currentDate = new Date();
+        const newDate = new Date(newAppointmentDate);
+
+        if (newDate < currentDate) {
+            toast.error('Ngày tiêm mới phải sau ngày hiện tại');
+            return;
+        }
+
         try {
             setIsEditingTime(true);
-            await submitEditTime(selectedAppointment, editedTime);
-            toast.success('Cập nhật giờ hẹn thành công!');
+            await submitEditTime(selectedAppointment, editedTime, newAppointmentDate, newNote);
+            toast.success('Cập nhật lịch hẹn thành công!');
             setShowEditTimeModal(false);
             await refreshAppointments();
         } catch (error) {
-            console.error('Error updating appointment time:', error);
-            toast.error('Có lỗi xảy ra khi cập nhật giờ hẹn. Vui lòng thử lại sau.');
+            console.error('Error updating appointment:', error);
+            toast.error('Có lỗi xảy ra khi cập nhật lịch hẹn. Vui lòng thử lại sau.');
         } finally {
             setIsEditingTime(false);
         }
@@ -268,6 +283,10 @@ const VaccinationProcess = () => {
                         onTimeChange={setEditedTime}
                         onSubmit={handleSubmitEditTime}
                         onClose={() => setShowEditTimeModal(false)}
+                        newAppointmentDate={newAppointmentDate}
+                        setNewAppointmentDate={setNewAppointmentDate}
+                        newNote={newNote}
+                        setNewNote={setNewNote}
                     />
                 )}
             </div>

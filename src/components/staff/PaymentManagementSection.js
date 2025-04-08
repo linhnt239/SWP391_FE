@@ -63,7 +63,7 @@ const PaymentManagementSection = () => {
 
         try {
             console.log('Attempting to mark as paid:', appointmentId);
-            
+
             const response = await fetch(`/api/appointmentDetails/${appointmentId}/mark-paid`, {
                 method: 'PUT',
                 headers: {
@@ -132,12 +132,17 @@ const PaymentManagementSection = () => {
     const formatDateTime = (date, time) => {
         const formattedDate = new Date(date).toLocaleDateString('vi-VN');
         let formattedTime = 'Chưa có giờ';
-        
+
         if (time && typeof time.hour !== 'undefined' && typeof time.minute !== 'undefined') {
             formattedTime = `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`;
         }
-        
+
         return { formattedDate, formattedTime };
+    };
+
+    const formatCreateDate = (createAt) => {
+        if (!createAt) return 'Không có dữ liệu';
+        return new Date(createAt).toLocaleString('vi-VN');
     };
 
     // Filter appointments
@@ -194,7 +199,7 @@ const PaymentManagementSection = () => {
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên trẻ</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày hẹn</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giờ hẹn</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phương thức thanh toán</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
@@ -203,9 +208,8 @@ const PaymentManagementSection = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {paginatedAppointments.length > 0 ? (
                             paginatedAppointments.map((appointment) => {
-                                const { formattedDate, formattedTime } = formatDateTime(
-                                    appointment.appointmentDate,
-                                    appointment.timeStart
+                                const { formattedDate } = formatDateTime(
+                                    appointment.appointmentDate
                                 );
                                 return (
                                     <tr key={appointment.appointmentId}>
@@ -216,7 +220,7 @@ const PaymentManagementSection = () => {
                                             {formattedDate}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {formattedTime}
+                                            {formatCreateDate(appointment.createAt)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {appointment.paymentMethod || 'Chưa chọn'}

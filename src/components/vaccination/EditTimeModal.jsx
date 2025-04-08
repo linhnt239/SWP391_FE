@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faCalendarAlt, faStickyNote } from '@fortawesome/free-solid-svg-icons';
 
 const EditTimeModal = ({
     appointment,
@@ -9,15 +9,22 @@ const EditTimeModal = ({
     formatDate,
     onTimeChange,
     onSubmit,
-    onClose
+    onClose,
+    newAppointmentDate,
+    setNewAppointmentDate,
+    newNote,
+    setNewNote
 }) => {
+    // Lấy ngày hiện tại để giới hạn datepicker
+    const today = new Date().toISOString().split('T')[0];
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-90vh overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-blue-600 flex items-center">
                         <FontAwesomeIcon icon={faClock} className="text-blue-600 mr-2" />
-                        Chỉnh sửa giờ hẹn
+                        Chỉnh sửa lịch hẹn
                     </h2>
                     <button
                         onClick={onClose}
@@ -31,12 +38,29 @@ const EditTimeModal = ({
 
                 <div className="bg-blue-50 p-4 mb-4 rounded">
                     <p className="text-blue-800">
-                        Bạn đang chỉnh sửa giờ hẹn cho lịch tiêm ngày {formatDate(appointment.appointmentDate)}
+                        Bạn đang chỉnh sửa lịch hẹn tiêm ngày {formatDate(appointment.appointmentDate)}
                     </p>
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2 text-gray-700">
+                    <label className="block text-sm font-medium mb-2 text-gray-700 flex items-center">
+                        <FontAwesomeIcon icon={faCalendarAlt} className="mr-2 text-blue-600" />
+                        Ngày hẹn mới <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        value={newAppointmentDate}
+                        onChange={(e) => setNewAppointmentDate(e.target.value)}
+                        min={today}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                    <p className="mt-2 text-sm text-gray-500">Ngày hẹn hiện tại: {formatDate(appointment.appointmentDate)}</p>
+                    <p className="mt-1 text-sm text-red-600">Lưu ý: Ngày hẹn mới phải sau ngày hiện tại</p>
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2 text-gray-700 flex items-center">
+                        <FontAwesomeIcon icon={faClock} className="mr-2 text-blue-600" />
                         Giờ hẹn mới <span className="text-red-500">*</span>
                     </label>
                     <div className="flex gap-2 items-center">
@@ -66,6 +90,20 @@ const EditTimeModal = ({
                     </div>
                     <p className="mt-2 text-sm text-gray-500">Giờ hẹn hiện tại: {appointment.timeStart}</p>
                     <p className="mt-1 text-sm text-blue-600">Lưu ý: Giờ hẹn chỉ có thể từ 8:00 đến 17:00</p>
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2 text-gray-700 flex items-center">
+                        <FontAwesomeIcon icon={faStickyNote} className="mr-2 text-blue-600" />
+                        Ghi chú
+                    </label>
+                    <textarea
+                        value={newNote}
+                        onChange={(e) => setNewNote(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        rows="3"
+                        placeholder="Thêm ghi chú cho lịch hẹn (nếu có)"
+                    ></textarea>
                 </div>
 
                 <div className="flex justify-end gap-4 mt-6">

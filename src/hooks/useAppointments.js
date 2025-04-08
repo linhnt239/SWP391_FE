@@ -184,9 +184,23 @@ export const useAppointments = () => {
         return true;
     };
 
-    // Hàm cập nhật giờ hẹn
-    const submitEditTime = async (appointment, editedTime) => {
+    // Hàm cập nhật giờ hẹn và ngày tiêm
+    const submitEditTime = async (appointment, editedTime, newAppointmentDate, newNote) => {
         if (!token) throw new Error('Unauthorized');
+
+        // Kiểm tra ngày tiêm mới phải sau ngày hiện tại
+        const currentDate = new Date();
+        const newDate = new Date(newAppointmentDate);
+
+        if (newDate < currentDate) {
+            throw new Error('Ngày tiêm mới phải sau ngày hiện tại');
+        }
+
+        // Kiểm tra ngày tiêm mới phải sau ngày tiêm hiện tại
+        const currentAppointmentDate = new Date(appointment.appointmentDate);
+        if (newDate < currentAppointmentDate) {
+            throw new Error('Ngày tiêm mới phải sau ngày tiêm đã đặt');
+        }
 
         // Tạo đối tượng timeStart theo định dạng yêu cầu của API
         const timeStartObj = {
@@ -199,11 +213,11 @@ export const useAppointments = () => {
         // Chuẩn bị dữ liệu đầy đủ cho request, giữ nguyên tất cả các trường hiện có
         const fullRequestData = {
             childrenName: appointment.childrenName || "",
-            note: appointment.note || "",
+            note: newNote || appointment.note || "",
             medicalIssue: appointment.medicalIssue || "",
             childrenGender: appointment.childrenGender || "",
             dateOfBirth: appointment.dateOfBirth || "",
-            appointmentDate: appointment.appointmentDate || "",
+            appointmentDate: newAppointmentDate || appointment.appointmentDate,
             timeStart: timeStartObj
         };
 
@@ -225,7 +239,12 @@ export const useAppointments = () => {
                 setAppointments(prevAppointments =>
                     prevAppointments.map(apt =>
                         apt.appointmentId === appointment.appointmentId
-                            ? { ...apt, timeStart: formattedTime }
+                            ? {
+                                ...apt,
+                                timeStart: formattedTime,
+                                appointmentDate: newAppointmentDate || apt.appointmentDate,
+                                note: newNote || apt.note
+                            }
                             : apt
                     )
                 );
@@ -258,14 +277,19 @@ export const useAppointments = () => {
             setAppointments(prevAppointments =>
                 prevAppointments.map(apt =>
                     apt.appointmentId === appointment.appointmentId
-                        ? { ...apt, timeStart: formattedTime }
+                        ? {
+                            ...apt,
+                            timeStart: formattedTime,
+                            appointmentDate: newAppointmentDate || apt.appointmentDate,
+                            note: newNote || apt.note
+                        }
                         : apt
                 )
             );
 
             return true;
         } catch (error) {
-            console.error("Error updating time:", error);
+            console.error("Error updating appointment:", error);
             throw error;
         }
     };

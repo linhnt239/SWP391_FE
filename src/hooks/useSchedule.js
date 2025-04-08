@@ -251,6 +251,8 @@ export const useSchedule = () => {
 
         try {
             const checkoutData = {
+                childrenId: formData.useExistingProfile && selectedChild ?
+                    (selectedChild.childrenId || selectedChild.id) : null,
                 childrenName: selectedChild ? selectedChild.childrenName : formData.childName,
                 childrenGender: selectedChild ? selectedChild.gender : formData.gender,
                 dateOfBirth: selectedChild ? selectedChild.dateOfBirth : formData.dateOfBirth,
@@ -353,13 +355,16 @@ export const useSchedule = () => {
         }
     };
 
-    // Sửa lại hàm handleCashCheckout để chuyển thẳng đến trang success
+    // Sửa lại hàm handleCashCheckout để thêm trường childrenId
     const handleCashCheckout = async () => {
         const toastId = toast.loading('Đang xử lý đặt lịch...');
 
         try {
             // Sử dụng định dạng dữ liệu giống hệt như trong handleCheckout (VnPay)
+            // Thêm trường childrenId nếu sử dụng hồ sơ có sẵn
             const checkoutData = {
+                childrenId: formData.useExistingProfile && selectedChild ?
+                    (selectedChild.childrenId || selectedChild.id) : null,
                 childrenName: selectedChild ? selectedChild.childrenName : formData.childName,
                 childrenGender: selectedChild ? selectedChild.gender : formData.gender,
                 dateOfBirth: selectedChild ? selectedChild.dateOfBirth : formData.dateOfBirth,

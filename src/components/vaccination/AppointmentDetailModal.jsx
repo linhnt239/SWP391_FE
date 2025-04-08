@@ -90,6 +90,10 @@ const AppointmentDetailModal = ({
                                 <span className="text-gray-600">Giờ hẹn:</span>
                                 <span className="font-semibold">{appointment.timeStart || "Chưa xác định"}</span>
                             </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Ngày tạo:</span>
+                                <span className="font-semibold">{appointment.createAt || "Chưa xác định"}</span>
+                            </div>
                         </div>
 
 
