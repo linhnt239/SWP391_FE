@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTimes, faFilter, faSearch, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 const AppointmentManagementSection = () => {
     const [appointments, setAppointments] = useState([]);
@@ -12,6 +12,10 @@ const AppointmentManagementSection = () => {
     const [reactions, setReactions] = useState({});
     const [loadingReactions, setLoadingReactions] = useState(false);
     const [updatingReaction, setUpdatingReaction] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterDateFrom, setFilterDateFrom] = useState('');
+    const [filterDateTo, setFilterDateTo] = useState('');
     const itemsPerPage = 10; // 10 lịch hẹn mỗi trang
 
     useEffect(() => {
@@ -139,6 +143,45 @@ const AppointmentManagementSection = () => {
         } finally {
             setUpdatingReaction(null);
         }
+    };
+
+    // Filter appointments với các bộ lọc mới
+    const filteredAppointments = appointments.filter(appointment => {
+        // Lọc theo tên
+        const matchesSearch = searchTerm === '' ||
+            (appointment.childrenName && appointment.childrenName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        // Lọc theo trạng thái
+        const matchesStatus = filterStatus === 'all' || appointment.status === filterStatus;
+
+        // Lọc theo ngày từ
+        const appointmentDate = new Date(appointment.appointmentDate);
+        const matchesDateFrom = !filterDateFrom || appointmentDate >= new Date(filterDateFrom);
+
+        // Lọc theo ngày đến
+        const matchesDateTo = !filterDateTo || appointmentDate <= new Date(filterDateTo);
+
+        return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+    });
+
+    // Pagination
+    const totalAppointments = filteredAppointments.length;
+    const totalPages = Math.ceil(totalAppointments / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalAppointments);
+    const paginatedAppointments = filteredAppointments.slice(startIndex, endIndex);
+
+    // Reset trang khi thay đổi bộ lọc
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterStatus, filterDateFrom, filterDateTo]);
+
+    // Xóa bộ lọc
+    const clearFilters = () => {
+        setSearchTerm('');
+        setFilterStatus('all');
+        setFilterDateFrom('');
+        setFilterDateTo('');
     };
 
     const verifyAppointment = async (appointmentId) => {
@@ -369,18 +412,6 @@ const AppointmentManagementSection = () => {
         return <span className="text-gray-500">N/A</span>;
     };
 
-    // Logic phân trang
-    const totalAppointments = appointments.length;
-    const totalPages = Math.ceil(totalAppointments / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, totalAppointments);
-    const paginatedAppointments = appointments.slice(startIndex, endIndex);
-
-    // Hàm chuyển trang
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
-
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -393,6 +424,97 @@ const AppointmentManagementSection = () => {
         <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-bold mb-6">Quản lý lịch hẹn</h2>
 
+            {/* Phần filter */}
+            <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                    <FontAwesomeIcon icon={faFilter} className="mr-2 text-blue-600" />
+                    Bộ lọc tìm kiếm
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Tìm kiếm theo tên */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tên trẻ</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm theo tên..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Lọc theo trạng thái */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                        <select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="Not Paid">Chưa thanh toán</option>
+                            <option value="Pending">Chờ xác nhận</option>
+                            <option value="Verified Coming">Đã xác nhận</option>
+                            <option value="Completed">Đã hoàn thành</option>
+                            <option value="Cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+
+                    {/* Lọc theo ngày từ */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="date"
+                                value={filterDateFrom}
+                                onChange={(e) => setFilterDateFrom(e.target.value)}
+                                className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Lọc theo ngày đến */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="date"
+                                value={filterDateTo}
+                                onChange={(e) => setFilterDateTo(e.target.value)}
+                                className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Nút xóa bộ lọc và thông tin số kết quả */}
+                <div className="mt-4 flex flex-wrap justify-between items-center">
+                    <button
+                        onClick={clearFilters}
+                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 transition-colors"
+                    >
+                        Xóa bộ lọc
+                    </button>
+
+                    <div className="text-sm text-gray-600">
+                        Tìm thấy <span className="font-medium">{filteredAppointments.length}</span> lịch hẹn
+                    </div>
+                </div>
+            </div>
+
+            {/* Bảng hiển thị kết quả */}
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -487,7 +609,7 @@ const AppointmentManagementSection = () => {
             {totalPages > 1 && (
                 <div className="mt-4 flex justify-center space-x-2">
                     <button
-                        onClick={() => handlePageChange(currentPage - 1)}
+                        onClick={() => setCurrentPage(currentPage - 1)}
                         disabled={currentPage === 1}
                         className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
                     >
@@ -496,15 +618,14 @@ const AppointmentManagementSection = () => {
                     {Array.from({ length: totalPages }, (_, index) => (
                         <button
                             key={index + 1}
-                            onClick={() => handlePageChange(index + 1)}
-                            className={`px-3 py-1 rounded ${currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
-                                }`}
+                            onClick={() => setCurrentPage(index + 1)}
+                            className={`px-3 py-1 rounded ${currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
                         >
                             {index + 1}
                         </button>
                     ))}
                     <button
-                        onClick={() => handlePageChange(currentPage + 1)}
+                        onClick={() => setCurrentPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
                         className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
                     >

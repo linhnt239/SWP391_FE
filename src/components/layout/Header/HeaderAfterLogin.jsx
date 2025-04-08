@@ -134,6 +134,11 @@ const HeaderAfterLogin = () => {
                                             Hồ sơ của trẻ
                                         </div>
                                     </Link>
+                                    <Link href="/injection-history">
+                                        <div className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                            Lịch sử của trẻ
+                                        </div>
+                                    </Link>
                                     <Link href="/cart">
                                         <div className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
                                             Giỏ hàng

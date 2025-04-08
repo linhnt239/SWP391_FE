@@ -57,6 +57,13 @@ const Staff = () => {
       description: "Dịch vụ tiêm vaccine cơ bản",
     },
   ]);
+  const [news, setNews] = useState([
+    {
+      id: 1,
+      title: "Tin tức mới nhất",
+      content: "Nội dung tin tức",
+    },
+  ]);
   const [newVaccine, setNewVaccine] = useState({
     illnessName: "",
     description: "",
@@ -255,7 +262,6 @@ const Staff = () => {
       !vaccineDetail.doseName ||
       !vaccineDetail.manufacturer ||
       vaccineDetail.quantity < 0 ||
-      vaccineDetail.stock < 0 ||
       vaccineDetail.price < 0 ||
       vaccineDetail.doseRequire < 0 ||
       vaccineDetail.dateBetweenDoses < 0
@@ -460,6 +466,7 @@ const Staff = () => {
             vaccines={vaccines}
             feedbacks={feedbacks}
             services={services}
+            news={news}
           />
         )}
         {activeSection === "addVaccine" && (
@@ -498,6 +505,7 @@ const Staff = () => {
             newService={newService}
             setNewService={setNewService}
             services={services}
+            news={news}
             editServiceId={editServiceId}
             editService={editService}
             setEditService={setEditService}

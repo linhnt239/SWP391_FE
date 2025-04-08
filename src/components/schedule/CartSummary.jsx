@@ -21,8 +21,8 @@ const CartSummary = ({ cartItems, totalPrice, formatPrice }) => {
                         {cartItems.map((item) => (
                             <div key={item.id} className="flex justify-between pb-4 border-b border-gray-100">
                                 <div>
-                                    <h3 className="font-medium text-gray-800">{item.name}</h3>
-                                    <p className="text-sm text-gray-600">Số mũi: {item.doses}</p>
+                                    <h3 className="font-medium text-gray-800">{item.doseName}</h3>
+                                    <p className="text-sm text-gray-600">Số mũi: {item.doseRequire}</p>
                                 </div>
                                 <div className="text-blue-600 font-medium">
                                     {formatPrice(item.price)}

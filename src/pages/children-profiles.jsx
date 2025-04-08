@@ -18,6 +18,9 @@ const ChildrenProfiles = () => {
     const [token, setToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeTab, setActiveTab] = useState({});
+    const [childrenInjectionHistory, setChildrenInjectionHistory] = useState({});
+    const [loadingInjectionHistory, setLoadingInjectionHistory] = useState({});
 
     // Lấy thông tin người dùng và token từ localStorage
     useEffect(() => {
@@ -279,6 +282,53 @@ const ChildrenProfiles = () => {
         return `${age} tuổi`;
     };
 
+    const fetchChildInjectionHistory = async (childrenId) => {
+        if (!userId || !token) return;
+
+        setLoadingInjectionHistory(prev => ({ ...prev, [childrenId]: true }));
+
+        try {
+            const response = await fetch(`/api/user/injection-history?userId=${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            const historyData = result.data || [];
+
+            // Lọc chỉ lấy lịch sử của trẻ hiện tại
+            const childHistory = historyData.filter(item => item.childrenId === childrenId);
+
+            // Sắp xếp theo ngày tiêm gần nhất
+            childHistory.sort((a, b) => new Date(b.injectionDate) - new Date(a.injectionDate));
+
+            setChildrenInjectionHistory(prev => ({
+                ...prev,
+                [childrenId]: childHistory
+            }));
+        } catch (error) {
+            console.error(`Error fetching injection history for child ${childrenId}:`, error);
+        } finally {
+            setLoadingInjectionHistory(prev => ({ ...prev, [childrenId]: false }));
+        }
+    };
+
+    const handleTabChange = (childrenId, tab) => {
+        setActiveTab(prev => ({ ...prev, [childrenId]: tab }));
+
+        // Nếu chuyển sang tab lịch sử tiêm và chưa có dữ liệu
+        if (tab === 'history' && !childrenInjectionHistory[childrenId]) {
+            fetchChildInjectionHistory(childrenId);
+        }
+    };
+
     return (
         <DefaultLayout>
             <div className="max-w-6xl mx-auto px-4 py-8">
@@ -328,28 +378,73 @@ const ChildrenProfiles = () => {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3 text-gray-600">
-                                        <div className="flex items-center">
-                                            <span className="font-semibold w-32">Ngày sinh:</span>
-                                            <span>{formatDate(child.dateOfBirth)}</span>
-                                        </div>
-                                        <div className="flex items-center">
-                                            <span className="font-semibold w-32">Tuổi:</span>
-                                            <span>{calculateAge(child.dateOfBirth)}</span>
-                                        </div>
-                                        <div className="flex items-center">
-                                            <span className="font-semibold w-32">Giới tính:</span>
-                                            <span>{child.gender === 'male' ? 'Nam' : 'Nữ'}</span>
-                                        </div>
-                                        {child.medicalIssue && (
-                                            <div>
-                                                <span className="font-semibold block mb-1">Vấn đề sức khỏe:</span>
-                                                <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">
-                                                    {child.medicalIssue}
-                                                </p>
-                                            </div>
-                                        )}
+                                    {/* Tab buttons */}
+                                    <div className="flex border-b mb-4">
+                                        <button
+                                            className={`px-4 py-2 font-medium ${activeTab[child.childrenId] !== 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                                            onClick={() => handleTabChange(child.childrenId, 'info')}
+                                        >
+                                            Thông tin
+                                        </button>
+                                        <button
+                                            className={`px-4 py-2 font-medium ${activeTab[child.childrenId] === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                                            onClick={() => handleTabChange(child.childrenId, 'history')}
+                                        >
+                                            Lịch sử tiêm
+                                        </button>
                                     </div>
+
+                                    {/* Tab content */}
+                                    {activeTab[child.childrenId] === 'history' ? (
+                                        <div>
+                                            {loadingInjectionHistory[child.childrenId] ? (
+                                                <div className="flex justify-center py-8">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                                                </div>
+                                            ) : childrenInjectionHistory[child.childrenId]?.length > 0 ? (
+                                                <div className="space-y-4">
+                                                    {childrenInjectionHistory[child.childrenId].map(injection => (
+                                                        <div key={injection.id} className="border-l-4 border-blue-500 pl-3 py-2">
+                                                            <div className="flex justify-between items-start">
+                                                                <div>
+                                                                    <h4 className="font-bold text-gray-800">{injection.doseName}</h4>
+                                                                    <p className="text-sm text-gray-600">Mũi thứ {injection.doseNumber}</p>
+                                                                </div>
+                                                                <span className="text-sm text-gray-500">{formatDate(injection.injectionDate)}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-8 text-gray-500">
+                                                    Chưa có lịch sử tiêm chủng
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3 text-gray-600">
+                                            <div className="flex items-center">
+                                                <span className="font-semibold w-32">Ngày sinh:</span>
+                                                <span>{formatDate(child.dateOfBirth)}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <span className="font-semibold w-32">Tuổi:</span>
+                                                <span>{calculateAge(child.dateOfBirth)}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <span className="font-semibold w-32">Giới tính:</span>
+                                                <span>{child.gender === 'male' ? 'Nam' : 'Nữ'}</span>
+                                            </div>
+                                            {child.medicalIssue && (
+                                                <div>
+                                                    <span className="font-semibold block mb-1">Vấn đề sức khỏe:</span>
+                                                    <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">
+                                                        {child.medicalIssue}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

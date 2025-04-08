@@ -1,7 +1,7 @@
 // src/components/staff/OverviewSection.js
 import React from 'react';
 
-const OverviewSection = ({ vaccines, feedbacks, services }) => {
+const OverviewSection = ({ vaccines, feedbacks, news }) => {
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold text-blue-900 mb-4">Overview</h2>
@@ -12,12 +12,12 @@ const OverviewSection = ({ vaccines, feedbacks, services }) => {
                     <p className="text-2xl font-bold text-blue-900">{vaccines.length}</p>
                 </div>
                 <div className="bg-green-100 p-4 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold text-green-900">Phản ứng sau tiêm</h3>
+                    <h3 className="text-lg font-semibold text-green-900">Feedbacks</h3>
                     <p className="text-2xl font-bold text-green-900">{feedbacks.filter((f) => !f.response).length}</p>
                 </div>
                 <div className="bg-yellow-100 p-4 rounded-lg text-center">
                     <h3 className="text-lg font-semibold text-yellow-900">Số lượng dịch vụ</h3>
-                    <p className="text-2xl font-bold text-yellow-900">{services.length}</p>
+                    <p className="text-2xl font-bold text-yellow-900">{news.length}</p>
                 </div>
             </div>
         </div>
