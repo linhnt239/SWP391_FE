@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 // Modal Component for Adding Vaccine Detail
 const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
@@ -238,29 +239,11 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
   );
 };
 
-// Main VaccineManagementSection Component
-const VaccineManagementSection = ({
-  showAddVaccineForm,
-  setShowAddVaccineForm,
-  newVaccine,
-  setNewVaccine,
-  vaccines,
-  editVaccineId,
-  editVaccine,
-  setEditVaccine,
-  loading,
-  deleteLoading,
-  handleAddVaccine,
-  handleDeleteVaccine,
-  handleEditVaccine,
-  handleSaveEditVaccine,
-  handleOpenVaccineDetailModal,
-}) => {
-  const [showVaccineDetails, setShowVaccineDetails] = useState(false);
-  const [selectedVaccineId, setSelectedVaccineId] = useState(null);
+// Vaccine Details Modal Component
+const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
   const [vaccineDetails, setVaccineDetails] = useState([]);
-  const [fetchLoading, setFetchLoading] = useState(false);
-  const [deleteDetailLoading, setDeleteDetailLoading] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [showAddDetailModal, setShowAddDetailModal] = useState(false);
   const [editDetailId, setEditDetailId] = useState(null);
   const [editedDetail, setEditedDetail] = useState({
     doseName: '',
@@ -274,55 +257,21 @@ const VaccineManagementSection = ({
     dosageAmount: 0,
     boosterInterval: 0,
   });
-  const [showImagePopup, setShowImagePopup] = useState(false);
-  const [selectedImageUrl, setSelectedImageUrl] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showAddDetailModal, setShowAddDetailModal] = useState(false);
+  const [deleteDetailLoading, setDeleteDetailLoading] = useState({});
 
-  const handleAddDetailCallback = (newDetail) => {
-    setVaccineDetails((prevDetails) => [...prevDetails, newDetail]);
-  };
+  useEffect(() => {
+    if (isOpen && vaccineId) {
+      fetchVaccineDetails();
+    }
+  }, [isOpen, vaccineId]);
 
-  const validateForm = () => {
-    if (!newVaccine.illnessName.trim() || !newVaccine.descriptions.trim()) {
-      setErrorMessage('Vui lòng điền đầy đủ thông tin hợp lệ!');
-      return false;
-    }
-    if (newVaccine.illnessName.length < 3) {
-      setErrorMessage('Tên bệnh phải có ít nhất 3 ký tự!');
-      return false;
-    }
-    if (newVaccine.descriptions.length < 3) {
-      setErrorMessage('Mô tả phải có ít nhất 3 ký tự!');
-      return false;
-    }
-    setErrorMessage('');
-    return true;
-  };
-
-  const onAddVaccine = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      await handleAddVaccine();
-      setErrorMessage('');
-      setShowAddVaccineForm(false);
-    } catch (error) {
-      setErrorMessage('Có lỗi xảy ra khi thêm vaccine. Vui lòng thử lại!');
-    }
-  };
-
-  const handleViewDetails = async (vaccineId) => {
-    setSelectedVaccineId(vaccineId);
-    setFetchLoading(true);
+  const fetchVaccineDetails = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
 
       const response = await fetch(`/api/vaccinesdetails-get/${vaccineId}`, {
-        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -330,30 +279,23 @@ const VaccineManagementSection = ({
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch details: ${response.status}`);
-      }
+      if (!response.ok) throw new Error('Failed to fetch details');
 
       const data = await response.json();
-      const vaccineDetails = Array.isArray(data.vaccineDetails) ? data.vaccineDetails : Array.isArray(data) ? data : [];
-      console.log('Fetched vaccine details:', vaccineDetails);
-      setVaccineDetails(vaccineDetails);
+      setVaccineDetails(Array.isArray(data.vaccineDetails) ? data.vaccineDetails : Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching vaccine details:', error.message);
-      setVaccineDetails([]);
+      console.error('Error:', error);
+      toast.error('Không thể tải thông tin chi tiết vaccine');
     } finally {
-      setFetchLoading(false);
-      setShowVaccineDetails(true);
+      setLoading(false);
     }
   };
 
-  const handleDeleteDetail = async (vaccineId, detailsId) => {
-    setDeleteDetailLoading((prev) => ({ ...prev, [detailsId]: true }));
+  const handleDeleteDetail = async (detailId) => {
+    setDeleteDetailLoading(prev => ({ ...prev, [detailId]: true }));
     try {
       const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token found');
-
-      const response = await fetch(`/api/vaccine-details/${detailsId}`, {
+      const response = await fetch(`/api/vaccine-details/${detailId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -362,15 +304,14 @@ const VaccineManagementSection = ({
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete detail: ${response.status}`);
-      }
+      if (!response.ok) throw new Error('Failed to delete');
 
-      setVaccineDetails((prevDetails) => prevDetails.filter((detail) => detail.vaccineDetailsId !== detailsId));
+      setVaccineDetails(details => details.filter(d => d.vaccineDetailsId !== detailId));
+      toast.success('Xóa thành công');
     } catch (error) {
-      console.error('Error deleting vaccine detail:', error.message);
+      toast.error('Không thể xóa chi tiết vaccine');
     } finally {
-      setDeleteDetailLoading((prev) => ({ ...prev, [detailsId]: false }));
+      setDeleteDetailLoading(prev => ({ ...prev, [detailId]: false }));
     }
   };
 
@@ -391,494 +332,488 @@ const VaccineManagementSection = ({
   };
 
   const handleSaveEditDetail = async () => {
-    if (!selectedVaccineId || !editDetailId) {
-      console.error('Invalid vaccine or detail ID');
-      return;
-    }
-
-    setFetchLoading(true);
     try {
       const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token found');
-
-      const response = await fetch(`/api/vaccine-details/${selectedVaccineId}/${editDetailId}`, {
+      const response = await fetch(`/api/vaccine-details/${vaccineId}/${editDetailId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
           Accept: '*/*',
         },
-        body: JSON.stringify({
-          ...editedDetail,
-          quantity: parseInt(editedDetail.quantity) || 0,
-          dateBetweenDoses: parseInt(editedDetail.dateBetweenDoses) || 0,
-          price: parseInt(editedDetail.price) || 0,
-          ageRequired: parseInt(editedDetail.ageRequired) || 0,
-          dosageAmount: parseInt(editedDetail.dosageAmount) || 0,
-          boosterInterval: parseInt(editedDetail.boosterInterval) || 0,
-        }),
+        body: JSON.stringify(editedDetail),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update: ${response.status} - ${errorText}`);
-      }
+      if (!response.ok) throw new Error('Failed to update');
 
       const updatedDetail = await response.json();
-      setVaccineDetails((prevDetails) =>
-        prevDetails.map((detail) =>
-          detail.vaccineDetailsId === editDetailId ? { ...detail, ...updatedDetail } : detail
-        )
+      setVaccineDetails(details =>
+        details.map(d => d.vaccineDetailsId === editDetailId ? { ...d, ...updatedDetail } : d)
       );
       setEditDetailId(null);
+      toast.success('Cập nhật thành công');
     } catch (error) {
-      console.error('Error updating vaccine detail:', error.message);
-    } finally {
-      setFetchLoading(false);
+      toast.error('Không thể cập nhật chi tiết vaccine');
     }
   };
 
-  const handleOpenImagePopup = (imageUrl) => {
-    setSelectedImageUrl(imageUrl);
-    setShowImagePopup(true);
-  };
-
-  const handleCloseImagePopup = () => {
-    setShowImagePopup(false);
-    setSelectedImageUrl('');
-  };
-
-  const handleBackToVaccines = () => {
-    setShowVaccineDetails(false);
-    setSelectedVaccineId(null);
-    setVaccineDetails([]);
-    setEditDetailId(null);
-  };
-
-  const handleOpenAddDetailModal = (vaccineId) => {
-    setSelectedVaccineId(vaccineId);
-    setShowAddDetailModal(true);
-  };
-
-  const handleCloseAddDetailModal = () => {
-    setShowAddDetailModal(false);
-  };
-
-  const selectedVaccine = vaccines.find((v) => v.vaccineId === selectedVaccineId);
+  if (!isOpen) return null;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold text-blue-900 mb-4">Vaccine Management</h2>
-      {!showVaccineDetails && (
-        <>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-6xl max-h-[90vh] overflow-hidden">
+        <div className="p-6 flex justify-between items-center border-b">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Chi tiết Vaccine: {vaccineName}
+          </h2>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowAddDetailModal(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg 
+              transition-all duration-200 flex items-center space-x-2 transform hover:scale-105"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Thêm mũi tiêm</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-8rem)]">
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+            </div>
+          ) : vaccineDetails.length > 0 ? (
+            <div className="grid gap-4">
+              {vaccineDetails.map((detail) => (
+                <div
+                  key={detail.vaccineDetailsId}
+                  className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md 
+                  transition-shadow duration-200 p-4"
+                >
+                  {editDetailId === detail.vaccineDetailsId ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tên mũi</label>
+                        <input
+                          type="text"
+                          value={editedDetail.doseName}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, doseName: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Số liều cần thiết</label>
+                        <input
+                          type="text"
+                          value={editedDetail.doseRequire}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, doseRequire: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">URL hình ảnh</label>
+                        <input
+                          type="text"
+                          value={editedDetail.imageUrl}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, imageUrl: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nhà sản xuất</label>
+                        <input
+                          type="text"
+                          value={editedDetail.manufacturer}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, manufacturer: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng</label>
+                        <input
+                          type="number"
+                          value={editedDetail.quantity}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, quantity: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng cách giữa các liều</label>
+                        <input
+                          type="text"
+                          value={editedDetail.dateBetweenDoses}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, dateBetweenDoses: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Giá (đồng)</label>
+                        <input
+                          type="number"
+                          value={editedDetail.price}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, price: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi yêu cầu</label>
+                        <input
+                          type="number"
+                          value={editedDetail.ageRequired}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, ageRequired: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Liều lượng (ml)</label>
+                        <input
+                          type="number"
+                          value={editedDetail.dosageAmount}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, dosageAmount: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng thời gian tăng cường</label>
+                        <input
+                          type="number"
+                          value={editedDetail.boosterInterval}
+                          onChange={(e) => setEditedDetail({ ...editedDetail, boosterInterval: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="md:col-span-3 flex justify-end space-x-2 pt-4 border-t mt-4">
+                        <button
+                          onClick={handleSaveEditDetail}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg
+                          transition-all duration-200 flex items-center space-x-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span>Lưu thay đổi</span>
+                        </button>
+                        <button
+                          onClick={() => setEditDetailId(null)}
+                          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg
+                          transition-all duration-200 flex items-center space-x-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          <span>Hủy</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="md:col-span-1">
+                        {detail.imageUrl ? (
+                          <img
+                            src={detail.imageUrl}
+                            alt={detail.doseName}
+                            className="w-full h-48 object-cover rounded-lg"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" 
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Tên mũi</h3>
+                          <p>{detail.doseName || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Số liều cần thiết</h3>
+                          <p>{detail.doseRequire || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Nhà sản xuất</h3>
+                          <p>{detail.manufacturer || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Số lượng</h3>
+                          <p>{detail.quantity || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Khoảng cách giữa các liều</h3>
+                          <p>{detail.dateBetweenDoses || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Giá</h3>
+                          <p>{detail.price ? `${detail.price.toLocaleString()}đ` : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Tuổi yêu cầu</h3>
+                          <p>{detail.ageRequired || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Liều lượng</h3>
+                          <p>{detail.dosageAmount ? `${detail.dosageAmount}ml` : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Khoảng thời gian tăng cường</h3>
+                          <p>{detail.boosterInterval || 'N/A'}</p>
+                        </div>
+                      </div>
+                      <div className="md:col-span-4 flex justify-end space-x-2 pt-4 border-t">
+                        <button
+                          onClick={() => handleEditDetail(detail)}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg
+                          transition-all duration-200 flex items-center space-x-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          <span>Sửa</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDetail(detail.vaccineDetailsId)}
+                          disabled={deleteDetailLoading[detail.vaccineDetailsId]}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg
+                          transition-all duration-200 flex items-center space-x-2"
+                        >
+                          {deleteDetailLoading[detail.vaccineDetailsId] ? (
+                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" 
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              <span>Xóa</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có thông tin chi tiết</h3>
+              <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách thêm thông tin chi tiết cho vaccine này.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showAddDetailModal && (
+        <AddVaccineDetailModal
+          vaccineId={vaccineId}
+          onClose={() => setShowAddDetailModal(false)}
+          onAddDetail={(newDetail) => {
+            setVaccineDetails(prev => [...prev, newDetail]);
+            setShowAddDetailModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Main VaccineManagementSection Component
+const VaccineManagementSection = ({
+  showAddVaccineForm,
+  setShowAddVaccineForm,
+  newVaccine,
+  setNewVaccine,
+  vaccines,
+  editVaccineId,
+  editVaccine,
+  setEditVaccine,
+  loading,
+  deleteLoading,
+  handleAddVaccine,
+  handleDeleteVaccine,
+  handleEditVaccine,
+  handleSaveEditVaccine,
+}) => {
+  const [selectedVaccine, setSelectedVaccine] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm">
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Quản lý Vaccine</h2>
           <button
             onClick={() => setShowAddVaccineForm(!showAddVaccineForm)}
-            className="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-700 mb-4"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg
+            transition-all duration-200 flex items-center space-x-2 transform hover:scale-105"
           >
-            {showAddVaccineForm ? 'Ẩn Form' : 'Thêm Vaccine'}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Thêm Vaccine</span>
           </button>
-          {showAddVaccineForm && (
-            <div className="grid gap-4 mb-6">
+        </div>
+
+        {showAddVaccineForm && (
+          <div className="bg-gray-50 p-6 rounded-lg mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Tên bệnh (illnessName)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên bệnh</label>
                 <input
                   type="text"
                   value={newVaccine.illnessName}
                   onChange={(e) => setNewVaccine({ ...newVaccine, illnessName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nhập tên bệnh..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Mô tả (descriptions)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
                 <input
                   type="text"
                   value={newVaccine.descriptions}
                   onChange={(e) => setNewVaccine({ ...newVaccine, descriptions: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nhập mô tả..."
                 />
               </div>
-              {errorMessage && (
-                <p className="text-red-500 text-sm">{errorMessage}</p>
-              )}
-              <div className="flex items-end">
-                <button
-                  onClick={onAddVaccine}
-                  className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <svg
-                        className="animate-spin h-5 w-5 mr-2 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    'Lưu Vaccine'
-                  )}
-                </button>
-              </div>
             </div>
-          )}
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Danh sách vaccine</h3>
-          <div className="grid grid-cols-4 gap-4 text-center font-semibold bg-gray-200 p-2 rounded-t-md">
-            <span>Tên bệnh</span>
-            <span>Mô tả</span>
-            <span>Hành động</span>
-            <span>Chi tiết</span>
-          </div>
-          <ul className="space-y-2">
-            {vaccines.map((vaccine) => (
-              <li key={vaccine.vaccineId} className="grid grid-cols-4 gap-4 items-center text-center">
-                {editVaccineId === vaccine.vaccineId ? (
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleAddVaccine}
+                disabled={loading}
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg
+                transition-all duration-200 flex items-center space-x-2"
+              >
+                {loading ? (
                   <>
-                    <input
-                      type="text"
-                      value={editVaccine.illnessName}
-                      onChange={(e) => setEditVaccine({ ...editVaccine, illnessName: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                      type="text"
-                      value={editVaccine.descriptions}
-                      onChange={(e) => setEditVaccine({ ...editVaccine, descriptions: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      onClick={handleSaveEditVaccine}
-                      className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-                    >
-                      Lưu
-                    </button>
-                    <span></span>
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" 
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Đang xử lý...</span>
                   </>
                 ) : (
                   <>
-                    <span>{vaccine.illnessName || 'N/A'}</span>
-                    <span>{vaccine.descriptions || 'N/A'}</span>
-                    <div className="flex justify-center space-x-2">
-                      <button
-                        onClick={() => handleDeleteVaccine(vaccine.vaccineId)}
-                        className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${deleteLoading[vaccine.vaccineId] ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={deleteLoading[vaccine.vaccineId]}
-                      >
-                        {deleteLoading[vaccine.vaccineId] ? (
-                          <>
-                            <svg
-                              className="animate-spin h-5 w-5 mr-2 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            Đang xóa...
-                          </>
-                        ) : (
-                          'Xóa'
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex justify-center space-x-2">
-                      <button
-                        onClick={() => handleViewDetails(vaccine.vaccineId)}
-                        className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 ${fetchLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={fetchLoading}
-                      >
-                        {fetchLoading ? 'Đang tải...' : 'Xem chi tiết'}
-                      </button>
-                    </div>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Lưu Vaccine</span>
                   </>
                 )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {showVaccineDetails && (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-700">
-              Danh sách Vaccine Details - {selectedVaccine?.illnessName || 'N/A'}
-            </h3>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleOpenAddDetailModal(selectedVaccineId)}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-              >
-                Thêm Mũi Tiêm
-              </button>
-              <button
-                onClick={handleBackToVaccines}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-              >
-                Back
               </button>
             </div>
           </div>
-          {fetchLoading ? (
-            <p className="text-gray-500">Đang tải chi tiết vaccine...</p>
-          ) : vaccineDetails.length > 0 ? (
-            <>
-              <div className="grid grid-cols-12 gap-4 mt-4 font-semibold bg-gray-200 p-2 rounded-t-md text-center">
-                <span className="col-span-1">Tên mũi</span>
-                <span className="col-span-1">Số liều</span>
-                <span className="col-span-1">URL ảnh</span>
-                <span className="col-span-1">Nhà sản xuất</span>
-                <span className="col-span-1">Số lượng</span>
-                <span className="col-span-1">Khoảng cách liều</span>
-                <span className="col-span-1">Giá (VNĐ)</span>
-                <span className="col-span-1">Tuổi yêu cầu</span>
-                <span className="col-span-1">Liều lượng (ml)</span>
-                <span className="col-span-1">Khoảng tăng cường</span>
-                <span className="col-span-1">Hành động</span>
-              </div>
-              <ul className="space-y-4">
-                {vaccineDetails.map((detail) => (
-                  <li
-                    key={detail.vaccineDetailsId}
-                    className="grid grid-cols-12 gap-4 p-4 bg-gray-100 rounded-md items-center text-center"
-                  >
-                    {editDetailId === detail.vaccineDetailsId ? (
-                      <>
-                        <div className="col-span-1">
-                          <input
-                            type="text"
-                            value={editedDetail.doseName}
-                            onChange={(e) => setEditedDetail({ ...editedDetail, doseName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="text"
-                            value={editedDetail.doseRequire}
-                            onChange={(e) => setEditedDetail({ ...editedDetail, doseRequire: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="text"
-                            value={editedDetail.imageUrl}
-                            onChange={(e) => setEditedDetail({ ...editedDetail, imageUrl: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="text"
-                            value={editedDetail.manufacturer}
-                            onChange={(e) => setEditedDetail({ ...editedDetail, manufacturer: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            value={editedDetail.quantity}
-                            onChange={(e) =>
-                              setEditedDetail({ ...editedDetail, quantity: parseInt(e.target.value) || 0 })
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
+        )}
 
-                        <div className="col-span-1">
-                          <input
-                            type="text"
-                            value={editedDetail.dateBetweenDoses}
-                            onChange={(e) => setEditedDetail({ ...editedDetail, dateBetweenDoses: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            value={editedDetail.price}
-                            onChange={(e) =>
-                              setEditedDetail({ ...editedDetail, price: parseInt(e.target.value) || 0 })
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            value={editedDetail.ageRequired}
-                            onChange={(e) =>
-                              setEditedDetail({ ...editedDetail, ageRequired: parseInt(e.target.value) || 0 })
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            value={editedDetail.dosageAmount}
-                            onChange={(e) =>
-                              setEditedDetail({ ...editedDetail, dosageAmount: parseInt(e.target.value) || 0 })
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            value={editedDetail.boosterInterval}
-                            onChange={(e) =>
-                              setEditedDetail({ ...editedDetail, boosterInterval: parseInt(e.target.value) || 0 })
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="col-span-1 flex justify-center space-x-2">
-                          <button
-                            onClick={handleSaveEditDetail}
-                            className={`bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center ${fetchLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={fetchLoading}
-                          >
-                            {fetchLoading ? (
-                              <>
-                                <svg
-                                  className="animate-spin h-5 w-5 mr-2 text-white"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  />
-                                </svg>
-                                Đang lưu...
-                              </>
-                            ) : (
-                              'Lưu'
-                            )}
-                          </button>
-                          <button
-                            onClick={() => setEditDetailId(null)}
-                            className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
-                            disabled={fetchLoading}
-                          >
-                            Hủy
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <span className="col-span-1">{detail.doseName || 'N/A'}</span>
-                        <span className="col-span-1">{detail.doseRequire || 'N/A'}</span>
-                        <div className="col-span-1">
-                          {detail.imageUrl ? (
-                            <img
-                              src={detail.imageUrl}
-                              alt="Vaccine"
-                              className="w-16 h-16 object-cover rounded-md cursor-pointer mx-auto"
-                              onClick={() => handleOpenImagePopup(detail.imageUrl)}
-                              onError={(e) => (e.target.src = 'https://via.placeholder.com/64?text=N/A')}
-                            />
-                          ) : (
-                            'N/A'
-                          )}
-                        </div>
-                        <span className="col-span-1">{detail.manufacturer || 'N/A'}</span>
-                        <span className="col-span-1">{detail.quantity || 'N/A'}</span>
-                        <span className="col-span-1">{detail.dateBetweenDoses || 'N/A'}</span>
-                        <span className="col-span-1">{detail.price ? detail.price.toLocaleString() : 'N/A'}</span>
-                        <span className="col-span-1">{detail.ageRequired || 'N/A'}</span>
-                        <span className="col-span-1">{detail.dosageAmount || 'N/A'}</span>
-                        <span className="col-span-1">{detail.boosterInterval || 'N/A'}</span>
-                        <div className="col-span-1 flex justify-center space-x-2">
-                          <button
-                            onClick={() => handleEditDetail(detail)}
-                            className="bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700"
-                          >
-                            Sửa
-                          </button>
-                          <button
-                            onClick={() => handleDeleteDetail(selectedVaccineId, detail.vaccineDetailsId)}
-                            className={`bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex items-center ${deleteDetailLoading[detail.vaccineDetailsId] ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={deleteDetailLoading[detail.vaccineDetailsId]}
-                          >
-                            {deleteDetailLoading[detail.vaccineDetailsId] ? (
-                              <>
-                                <svg
-                                  className="animate-spin h-5 w-5 mr-2 text-white"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  />
-                                </svg>
-                                Đang xóa...
-                              </>
-                            ) : (
-                              'Xóa'
-                            )}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="text-gray-500">Không có chi tiết vaccine nào.</p>
-          )}
-        </>
-      )}
-
-      {showImagePopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <img
-              src={selectedImageUrl}
-              alt="Vaccine Preview"
-              className="max-w-full max-h-96 object-contain"
-              onError={(e) => (e.target.src = 'https://via.placeholder.com/300?text=N/A')}
-            />
-            <button
-              onClick={handleCloseImagePopup}
-              className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              Đóng
-            </button>
-          </div>
+        {/* Vaccine List */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tên bệnh
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Mô tả
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {vaccines.map((vaccine) => (
+                <tr key={vaccine.vaccineId} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{vaccine.illnessName}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-500 line-clamp-2">{vaccine.descriptions}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        onClick={() => {
+                          setSelectedVaccine(vaccine);
+                          setShowDetailsModal(true);
+                        }}
+                        className="bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded-lg
+                        transition-all duration-200 text-sm font-medium flex items-center space-x-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span>Chi tiết</span>
+                      </button>       
+                      <button
+                        onClick={() => handleDeleteVaccine(vaccine.vaccineId)}
+                        disabled={deleteLoading[vaccine.vaccineId]}
+                        className="bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1 rounded-lg
+                        transition-all duration-200 text-sm font-medium flex items-center space-x-1"
+                      >
+                        {deleteLoading[vaccine.vaccineId] ? (
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" 
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span>Xóa</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
-      {showAddDetailModal && (
-        <AddVaccineDetailModal
-          vaccineId={selectedVaccineId}
-          onClose={handleCloseAddDetailModal}
-          onAddDetail={handleAddDetailCallback}
-        />
-      )}
+      {/* Details Modal */}
+      <VaccineDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        vaccineId={selectedVaccine?.vaccineId}
+        vaccineName={selectedVaccine?.illnessName}
+      />
     </div>
   );
 };
