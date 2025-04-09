@@ -1,7 +1,8 @@
 // src/components/staff/OverviewSection.js
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSyringe, faCommentDots, faNewspaper } from '@fortawesome/free-solid-svg-icons';
 
-<<<<<<< HEAD
 const StatCard = ({ title, value, icon, bgColor, textColor, borderColor }) => {
   return (
     <div className={`${bgColor} p-6 rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 border-l-4 ${borderColor}`}>
@@ -9,27 +10,6 @@ const StatCard = ({ title, value, icon, bgColor, textColor, borderColor }) => {
         <div>
           <p className={`text-sm font-medium ${textColor} mb-1 uppercase tracking-wider`}>{title}</p>
           <p className={`text-3xl font-bold ${textColor}`}>{value}</p>
-=======
-const OverviewSection = ({ vaccines, feedbacks, news }) => {
-    return (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold text-blue-900 mb-4">Overview</h2>
-            <p className="text-gray-700 mb-4">Chào mừng bạn đến với bảng điều khiển quản lý nhân viên.</p>
-            <div className="grid grid-cols-3 gap-4">
-                <div className="bg-blue-100 p-4 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold text-blue-900">Số lượng vaccine</h3>
-                    <p className="text-2xl font-bold text-blue-900">{vaccines.length}</p>
-                </div>
-                <div className="bg-green-100 p-4 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold text-green-900">Feedbacks</h3>
-                    <p className="text-2xl font-bold text-green-900">{feedbacks.filter((f) => !f.response).length}</p>
-                </div>
-                <div className="bg-yellow-100 p-4 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold text-yellow-900">Số lượng dịch vụ</h3>
-                    <p className="text-2xl font-bold text-yellow-900">{news.length}</p>
-                </div>
-            </div>
->>>>>>> 2731c357bc8ffb19367eefaf3174bfb4dc8be498
         </div>
         <div className={`${textColor} opacity-75 text-3xl`}>
           {icon}
@@ -53,40 +33,25 @@ const OverviewSection = ({ vaccines, feedbacks, services }) => {
         <StatCard
           title="Số lượng vaccine"
           value={vaccines.length}
-          icon={
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-            </svg>
-          }
+          icon={<FontAwesomeIcon icon={faSyringe} className="w-12 h-12" />}
           bgColor="bg-gradient-to-r from-blue-50 to-blue-100"
           textColor="text-blue-700"
           borderColor="border-blue-500"
         />
 
         <StatCard
-          title="Phản ứng sau tiêm"
+          title="Phản hồi chưa trả lời"
           value={feedbacks.filter((f) => !f.response).length}
-          icon={
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          }
+          icon={<FontAwesomeIcon icon={faCommentDots} className="w-12 h-12" />}
           bgColor="bg-gradient-to-r from-green-50 to-green-100"
           textColor="text-green-700"
           borderColor="border-green-500"
         />
 
         <StatCard
-          title="Tin Tức"
+          title="Tin tức"
           value={services.length}
-          icon={
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-            </svg>
-          }
+          icon={<FontAwesomeIcon icon={faNewspaper} className="w-12 h-12" />}
           bgColor="bg-gradient-to-r from-yellow-50 to-yellow-100"
           textColor="text-yellow-700"
           borderColor="border-yellow-500"
