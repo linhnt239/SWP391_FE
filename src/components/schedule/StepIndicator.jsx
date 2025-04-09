@@ -23,6 +23,12 @@ const StepIndicator = ({ currentStep }) => {
                 </div>
                 <span className="text-sm font-medium">Xác nhận từ chúng tôi</span>
             </div>
+            <div className="flex flex-col items-center text-gray-500">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-300">
+                    4
+                </div>
+                <span className="text-sm font-medium">Finish</span>
+            </div>
         </div>
     );
 };
