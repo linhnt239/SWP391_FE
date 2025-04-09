@@ -153,6 +153,7 @@ const AppointmentTable = ({
                         <th className="px-6 py-3 text-left">Giờ tiêm</th>
                         <th className="px-6 py-3 text-left">Mũi vaccine</th>
                         <th className="px-6 py-3 text-left">Trạng thái</th>
+                        <th className="px-6 py-3 text-left">Phản ứng</th>
                         <th className="px-6 py-3 text-left">Đánh giá</th>
                         <th className="px-6 py-3 text-left">Thao tác</th>
                     </tr>
@@ -179,6 +180,12 @@ const AppointmentTable = ({
                                 <span className={`px-2 py-1 rounded-full text-sm ${getStatusClass(appointment.status)}`}>
                                     {getStatusText(appointment.status)}
                                 </span>
+                            </td>
+                            <td className="px-6 py-4">
+                                {appointment.reactions && appointment.reactions.length > 0
+                                    ? appointment.reactions[0].condition || "Không có phản ứng"
+                                    : "—"
+                                }
                             </td>
                             <td className="px-6 py-4">
                                 {loadingFeedbacks ? (

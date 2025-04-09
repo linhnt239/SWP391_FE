@@ -125,8 +125,7 @@ const Home = () => {
               <thead>
                 <tr className="bg-blue-900 text-white">
                   <th className="py-3 px-4 text-left">Tên vaccine</th>
-                  <th className="py-3 px-4 text-left">Đối tượng</th>
-                  <th className="py-3 px-4 text-left">Giá (VNĐ)</th>
+                  <th className="py-3 px-4 text-left">Giá TB(VNĐ)</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,11 +147,6 @@ const Home = () => {
                       <tr key={vaccine.vaccineId} className="border-b">
                         <td className="py-3 px-4">{vaccine.illnessName}</td>
                         <td className="py-3 px-4">
-                          {vaccine.ageLimit === 0
-                            ? "Mọi lứa tuổi"
-                            : `Trẻ từ ${vaccine.ageRequired} tháng tuổi`}
-                        </td>
-                        <td className="py-3 px-4">
                           {vaccine.vaccineDetailsList[0].price.toLocaleString()} VNĐ
                         </td>
                       </tr>
@@ -161,7 +155,6 @@ const Home = () => {
                 )}
                 <tr className="border-b">
                   <td className="py-3 px-4">Tư vấn chuyên gia (trực tuyến)</td>
-                  <td className="py-3 px-4">Phụ huynh</td>
                   <td className="py-3 px-4">Miễn phí</td>
                 </tr>
               </tbody>

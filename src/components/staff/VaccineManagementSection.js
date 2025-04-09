@@ -41,10 +41,10 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
       setErrorMessage('Khoảng thời gian tăng cường không được nhỏ hơn 0!');
       return false;
     }
-    if (newDetail.ageRequired < 0) {
-      setErrorMessage('Tuổi yêu cầu không được nhỏ hơn 0!');
-      return false;
-    }
+    // if (newDetail.ageRequired < 0) {
+    //   setErrorMessage('Tuổi yêu cầu không được nhỏ hơn 0!');
+    //   return false;
+    // }
     if (newDetail.dateBetweenDoses < 0) {
       setErrorMessage('Khoảng cách giữa các mũi không được nhỏ hơn 0!');
       return false;
@@ -170,7 +170,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
             />
           </div>
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi yêu cầu</label>
             <input
               type="number"
@@ -178,7 +178,7 @@ const AddVaccineDetailModal = ({ vaccineId, onClose, onAddDetail }) => {
               onChange={(e) => setNewDetail({ ...newDetail, ageRequired: parseInt(e.target.value) || 0 })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
             />
-          </div>
+          </div> */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Liều lượng (ml)</label>
             <input
@@ -466,7 +466,7 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
-                      <div>
+                      {/* <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi yêu cầu</label>
                           <input
                             type="number"
@@ -474,7 +474,7 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
                           onChange={(e) => setEditedDetail({ ...editedDetail, ageRequired: parseInt(e.target.value) || 0 })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                           />
-                        </div>
+                        </div> */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Liều lượng (ml)</label>
                           <input
@@ -563,10 +563,10 @@ const VaccineDetailsModal = ({ isOpen, onClose, vaccineId, vaccineName }) => {
                           <h3 className="font-semibold text-gray-800">Giá</h3>
                           <p>{detail.price ? `${detail.price.toLocaleString()}đ` : 'N/A'}</p>
                         </div>
-                        <div>
+                        {/* <div>
                           <h3 className="font-semibold text-gray-800">Tuổi yêu cầu</h3>
                           <p>{detail.ageRequired || 'N/A'}</p>
-                        </div>
+                        </div> */}
                         <div>
                           <h3 className="font-semibold text-gray-800">Liều lượng</h3>
                           <p>{detail.dosageAmount ? `${detail.dosageAmount}ml` : 'N/A'}</p>

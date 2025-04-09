@@ -361,10 +361,7 @@ const VaccineDetail = () => {
                                                 {vaccine.quantity} liều
                                             </span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">Độ tuổi yêu cầu:</span>
-                                            <span>{vaccine.ageRequired} tuổi</span>
-                                        </div>
+                                        
                                         <div className="flex justify-between">
                                             <span className="font-medium text-gray-700">Liều lượng:</span>
                                             <span>{vaccine.dosageAmount} ml</span>
