@@ -461,7 +461,7 @@ const Profile = () => {
                                                 <table className="min-w-full divide-y divide-gray-200">
                                                     <thead className="bg-gray-50">
                                                         <tr>
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã thanh toán</th>
+
                                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số tiền</th>
                                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phương thức</th>
                                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
@@ -471,9 +471,7 @@ const Profile = () => {
                                                     <tbody className="bg-white divide-y divide-gray-200">
                                                         {formData.payments.map((payment, index) => (
                                                             <tr key={payment.paymentId || index} className="hover:bg-gray-50">
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                                    {payment.paymentId ? payment.paymentId.substring(0, 8) + '...' : 'N/A'}
-                                                                </td>
+
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-blue-600">
                                                                     {formatPrice(payment.amount || 0)}
                                                                 </td>
